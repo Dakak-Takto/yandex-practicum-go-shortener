@@ -15,8 +15,8 @@ func main() {
 }
 
 func CreateNewServer() *gin.Engine {
-	server := gin.Default()
-	server.GET("/:short", handlers.GetHandler)
+	server := gin.New()
+	server.GET("/:key", handlers.GetHandler)
 	server.POST("/", handlers.PostHandler)
 	return server
 }

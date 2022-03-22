@@ -1,23 +1,53 @@
 package storage
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"hash/crc32"
+	"math/rand"
+	"sync"
+	"time"
+)
 
-type Links map[string]string
+var storage = make(map[string]string)
+var mu sync.Mutex
+var saveAttemps = 10
 
-func CreateNew() *Links {
-	links := make(Links)
-	return &links
+func Save(value string) (string, error) {
+	for i := 0; i < saveAttemps; i++ {
+		key := generateKey(value)
+		if !isExist(key) {
+			mu.Lock()
+			storage[key] = value
+			mu.Unlock()
+			return key, nil
+		}
+	}
+	return "", errors.New("Free key not found")
 }
 
-func (l Links) Get(id string) (string, error) {
-	if link, ok := l[id]; ok {
-		return link, nil
+func Get(key string) (string, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if value, ok := storage[key]; ok {
+		return value, nil
 	} else {
-		err := errors.New("not found")
-		return "", err
+		return "", errors.New("Item not found")
 	}
 }
 
-func (l Links) Set(short string, long string) {
-	l[short] = long
+func isExist(key string) bool {
+	_, ok := storage[key]
+	return ok
+}
+
+func generateKey(str string) string {
+	b := []byte(str)
+	hash := crc32.ChecksumIEEE(b)
+	salt := hash + uint32(time.Now().UnixMicro()) + rand.Uint32()
+	return fmt.Sprintf("%x", hash+salt)
+}
+
+func Len() int {
+	return len(storage)
 }
