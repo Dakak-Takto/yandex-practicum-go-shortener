@@ -23,7 +23,7 @@ func Save(value string) (string, error) {
 			return key, nil
 		}
 	}
-	return "", errors.New("Free key not found")
+	return "", errors.New("free key not found")
 }
 
 func Get(key string) (string, error) {
@@ -32,7 +32,7 @@ func Get(key string) (string, error) {
 	if value, ok := storage[key]; ok {
 		return value, nil
 	} else {
-		return "", errors.New("Item not found")
+		return "", errors.New("item not found")
 	}
 }
 
