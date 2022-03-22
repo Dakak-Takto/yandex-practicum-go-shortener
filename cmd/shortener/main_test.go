@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var testUrl = "https://practicum.yandex.ru/learn/go-advanced/courses"
+var testURL = "https://practicum.yandex.ru/learn/go-advanced/courses"
 var server = CreateNewServer()
 
 func TestHandlers(t *testing.T) {
@@ -21,7 +21,7 @@ func TestHandlers(t *testing.T) {
 	var shortLink string
 
 	t.Run("Getting short link", func(t *testing.T) {
-		reader := strings.NewReader(testUrl)
+		reader := strings.NewReader(testURL)
 		request := httptest.NewRequest(http.MethodPost, "/", reader)
 		response, body := testRequest(t, server, request)
 		defer response.Body.Close()
@@ -47,7 +47,7 @@ func TestHandlers(t *testing.T) {
 		response, _ := testRequest(t, server, request)
 		defer response.Body.Close()
 		require.Equal(t, response.StatusCode, http.StatusTemporaryRedirect)
-		require.Equal(t, response.Header.Get("Location"), testUrl)
+		require.Equal(t, response.Header.Get("Location"), testURL)
 	})
 
 	t.Run("Send method POST without body", func(t *testing.T) {
@@ -72,7 +72,7 @@ func testStress(t *testing.T, c <-chan time.Time) int {
 		case <-c:
 			return i
 		default:
-			reader := strings.NewReader(testUrl)
+			reader := strings.NewReader(testURL)
 			request := httptest.NewRequest(http.MethodPost, "/", reader)
 			response, body := testRequest(t, server, request)
 			defer response.Body.Close()
