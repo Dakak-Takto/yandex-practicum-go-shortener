@@ -1,7 +1,7 @@
 package main
 
 import (
-	"yandex-practicum-go-shortener/cmd/shortener/handlers"
+	"yandex-practicum-go-shortener/handlers"
 
 	"github.com/gin-gonic/gin"
 )

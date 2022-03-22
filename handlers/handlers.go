@@ -4,7 +4,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"yandex-practicum-go-shortener/cmd/shortener/storage"
+	"yandex-practicum-go-shortener/storage"
 
 	"github.com/gin-gonic/gin"
 )
