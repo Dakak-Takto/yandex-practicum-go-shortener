@@ -44,8 +44,8 @@ func isExist(key string) bool {
 func generateKey(str string) string {
 	b := []byte(str)
 	hash := crc32.ChecksumIEEE(b)
-	salt := hash + uint32(time.Now().UnixMicro()) + rand.Uint32()
-	return fmt.Sprintf("%x", hash+salt)
+	hash += uint32(time.Now().UnixMicro()) + rand.Uint32()
+	return fmt.Sprintf("%x", hash)
 }
 
 func Len() int {
