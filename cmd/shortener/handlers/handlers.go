@@ -26,13 +26,13 @@ func PostHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	newUrlValue := string(body)
-	newUrlValue = strings.TrimSpace(newUrlValue)
-	if newUrlValue == "" {
+	newURLValue := string(body)
+	newURLValue = strings.TrimSpace(newURLValue)
+	if newURLValue == "" {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	key, err := storage.Save(newUrlValue)
+	key, err := storage.Save(newURLValue)
 	if err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
