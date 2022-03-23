@@ -35,20 +35,6 @@ func TestHandlers(t *testing.T) {
 		require.Equal(t, response.StatusCode, http.StatusTemporaryRedirect)
 		require.Equal(t, response.Header.Get("Location"), testURL)
 	})
-
-	t.Run("Send method POST without body", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodPost, "/", nil)
-		response, _ := testRequest(t, server, request)
-		defer response.Body.Close()
-		require.Equal(t, response.StatusCode, http.StatusBadRequest)
-	})
-
-	t.Run("Get non-existent record", func(t *testing.T) {
-		request := httptest.NewRequest(http.MethodGet, "/001122334455", nil)
-		response, _ := testRequest(t, server, request)
-		defer response.Body.Close()
-		require.Equal(t, response.StatusCode, http.StatusNotFound)
-	})
 }
 
 func testRequest(t *testing.T, server *gin.Engine, request *http.Request) (*http.Response, string) {

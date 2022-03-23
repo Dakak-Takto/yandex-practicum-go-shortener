@@ -1,0 +1,2 @@
+serverAddr: "localhost:8080"
+scheme: "http"

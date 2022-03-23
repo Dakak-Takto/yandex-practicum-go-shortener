@@ -1,9 +1,14 @@
 package handlers
 
 import (
+	"fmt"
+	"hash/crc32"
 	"io"
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
+	"yandex-practicum-go-shortener/config"
 	"yandex-practicum-go-shortener/storage"
 
 	"github.com/gin-gonic/gin"
@@ -20,26 +25,30 @@ func GetHandler(c *gin.Context) {
 }
 
 func PostHandler(c *gin.Context) {
-
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	newURLValue := string(body)
-	newURLValue = strings.TrimSpace(newURLValue)
-	if newURLValue == "" {
+	URL := string(body)
+	URL = strings.TrimSpace(URL)
+	if URL == "" {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
-	key, err := storage.Save(newURLValue)
+	key := generateKey(URL)
+	err = storage.Set(key, URL)
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
+		c.String(http.StatusInternalServerError, "%s", err)
 		return
 	}
-	scheme := "http"
-	if tls := c.Request.TLS; tls != nil {
-		scheme = "https"
-	}
-	c.String(http.StatusCreated, "%s://%s/%s", scheme, c.Request.Host, key)
+	c.String(http.StatusCreated, "%s://%s/%s", config.GetScheme(), config.GetAddr(), key)
+}
+
+func generateKey(str string) string {
+	b := []byte(str)
+	hash := crc32.ChecksumIEEE(b)
+	hash += uint32(time.Now().UnixMicro()) + rand.Uint32()
+
+	return fmt.Sprintf("%x", hash)
 }
