@@ -9,7 +9,7 @@ on:
 jobs:
 
   shortenertest:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     container: golang:1.17
 
     services:
