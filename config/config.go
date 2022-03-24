@@ -24,6 +24,12 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// TODO fix hardcode
+	// на автотестах в гитхабе приложение почему-то не стартует.
+	// Попробую захардкодить сюда переменные
+	cfg.ServerAddr = "localhost:8080"
+	cfg.Scheme = "http"
 }
 
 func GetAddr() string {
