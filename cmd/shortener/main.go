@@ -10,8 +10,6 @@ import (
 
 func main() {
 	server := CreateNewServer()
-	server.SetTrustedProxies(nil)
-
 	addr := config.GetAddr()
 	log.Fatal(server.Run(addr))
 }
