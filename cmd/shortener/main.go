@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"yandex-practicum-go-shortener/config"
 	"yandex-practicum-go-shortener/handlers"
 
@@ -10,7 +11,9 @@ import (
 func main() {
 	server := CreateNewServer()
 	server.SetTrustedProxies(nil)
-	server.Run(config.GetAddr())
+
+	addr := config.GetAddr()
+	log.Fatal(server.Run(addr))
 }
 
 func CreateNewServer() *gin.Engine {
