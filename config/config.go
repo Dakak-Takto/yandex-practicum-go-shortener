@@ -19,6 +19,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("error while opening config file: %s", err)
 	}
+
 	err = yaml.Unmarshal(file, &cfg)
 	if err != nil {
 		log.Fatal(err)

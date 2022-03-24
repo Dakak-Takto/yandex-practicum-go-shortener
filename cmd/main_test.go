@@ -35,6 +35,7 @@ func TestHandlers(t *testing.T) {
 		require.Equal(t, response.StatusCode, http.StatusTemporaryRedirect)
 		require.Equal(t, response.Header.Get("Location"), testURL)
 	})
+
 }
 
 func testRequest(t *testing.T, server *gin.Engine, request *http.Request) (*http.Response, string) {

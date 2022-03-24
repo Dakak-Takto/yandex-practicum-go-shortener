@@ -1,13 +1,9 @@
 package handlers
 
 import (
-	"fmt"
-	"hash/crc32"
 	"io"
-	"math/rand"
 	"net/http"
-	"strings"
-	"time"
+	"net/url"
 	"yandex-practicum-go-shortener/config"
 	"yandex-practicum-go-shortener/storage"
 
@@ -15,13 +11,13 @@ import (
 )
 
 func GetHandler(c *gin.Context) {
-	query := c.Param("key")
-	link, err := storage.Get(query)
+	key := c.Param("key")
+	url, err := storage.GetValueByKey(key)
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	c.Redirect(http.StatusTemporaryRedirect, link)
+	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
 func PostHandler(c *gin.Context) {
@@ -30,25 +26,13 @@ func PostHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	URL := string(body)
-	URL = strings.TrimSpace(URL)
-	if URL == "" {
-		c.AbortWithStatus(http.StatusBadRequest)
-		return
-	}
-	key := generateKey(URL)
-	err = storage.Set(key, URL)
+
+	parsedURL, err := url.ParseRequestURI(string(body))
 	if err != nil {
-		c.String(http.StatusInternalServerError, "%s", err)
+		c.String(http.StatusBadRequest, "specify valid url")
 		return
 	}
+	key := storage.SetValueReturnKey(parsedURL.String())
+
 	c.String(http.StatusCreated, "%s://%s/%s", config.GetScheme(), config.GetAddr(), key)
-}
-
-func generateKey(str string) string {
-	b := []byte(str)
-	hash := crc32.ChecksumIEEE(b)
-	hash += uint32(time.Now().UnixMicro()) + rand.Uint32()
-
-	return fmt.Sprintf("%x", hash)
 }

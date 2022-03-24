@@ -2,39 +2,43 @@ package storage
 
 import (
 	"errors"
+	"fmt"
+	"math/rand"
 	"sync"
+	"time"
 )
 
 var storage = make(map[string]string)
 var mu sync.Mutex
 
-func Get(key string) (string, error) {
-	if v, ok := storage[key]; ok {
-		return v, nil
+func GetValueByKey(key string) (value string, err error) {
+	if value, ok := storage[key]; ok {
+		return value, nil
 	}
-
 	return "", errors.New("not found")
 }
 
-func Set(key, value string) error {
-	if !isExist(key) {
-		storage[key] = value
-		return nil
-	}
-
-	return errors.New("key already exists")
+func SetValueReturnKey(value string) (key string) {
+	mu.Lock()
+	key = generateUniqueKey()
+	storage[key] = value
+	mu.Unlock()
+	return key
 }
 
-func isExist(key string) bool {
-	_, isExists := storage[key]
-
+func keyIsExist(key string) (isExists bool) {
+	_, isExists = storage[key]
 	return isExists
 }
 
-func Lock() {
-	mu.Lock()
-}
-
-func UnLock() {
-	mu.Unlock()
+func generateUniqueKey() (key string) {
+	for {
+		t := uint32(time.Now().UnixMicro())
+		r := rand.Uint32()
+		key := fmt.Sprintf("%x", t+r)
+		if keyIsExist(key) {
+			continue
+		}
+		return key
+	}
 }

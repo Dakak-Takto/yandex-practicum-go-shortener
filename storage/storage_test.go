@@ -7,13 +7,15 @@ import (
 )
 
 func TestStorage(t *testing.T) {
-	testString := "test string content"
 	t.Run("Проверка на запись и чтение", func(t *testing.T) {
-		err := Set("test key", "test value")
-		require.NoError(t, err)
 
-		value, err := Get("test key")
+		testValue := "test string content"
+
+		key := SetValueReturnKey(testValue)
+		require.NotEmpty(t, key)
+
+		value, err := GetValueByKey(key)
 		require.NoError(t, err)
-		require.Equal(t, value, testString)
+		require.Equal(t, value, testValue)
 	})
 }
