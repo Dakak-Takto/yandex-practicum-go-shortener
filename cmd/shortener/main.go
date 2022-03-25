@@ -18,4 +18,5 @@ func CreateNewServer() *gin.Engine {
 	// server.GET("/:key", handlers.GetHandler)
 	// server.POST("/", handlers.PostHandler)
 	return server
+
 }
