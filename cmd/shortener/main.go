@@ -10,7 +10,6 @@ import (
 
 func main() {
 	server := CreateNewServer()
-
 	addr := config.GetAddr()
 	log.Printf("Start server on %s", addr)
 	log.Fatal(server.Run(addr))
