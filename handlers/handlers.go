@@ -34,5 +34,5 @@ func PostHandler(c *gin.Context) {
 	}
 	key := storage.SetValueReturnKey(parsedURL.String())
 
-	c.String(http.StatusCreated, "%s://%s/%s", config.GetScheme(), config.GetAddr(), key)
+	c.String(http.StatusCreated, "%s://%s/%s", config.Scheme, config.Addr, key)
 }
