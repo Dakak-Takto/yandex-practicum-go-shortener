@@ -64,7 +64,7 @@ jobs:
           shortenertest -test.v -test.run=^TestIteration3$ -source-path=.
 
       - name: "Code increment #4"
-        if: ${{ false }}
+        if: always()
         run: |
           shortenertest -test.v -test.run=^TestIteration4$ \
               -source-path=. \
