@@ -20,7 +20,12 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	Addr = config.Addr
-	BaseURL = config.BaseURL
-	log.Printf("config loaded. server_addr: `%s`; baseURL: `%s`", Addr, BaseURL)
+	if config.Addr != "" {
+		Addr = config.Addr
+		log.Print("ADDRESS not present. Use default")
+	}
+	if config.BaseURL != "" {
+		BaseURL = config.BaseURL
+		log.Print("BASE_URL not present. Use default")
+	}
 }
