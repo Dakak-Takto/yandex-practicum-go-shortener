@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -27,12 +29,24 @@ func PostHandler(c *gin.Context) {
 		return
 	}
 
-	parsedURL, err := url.ParseRequestURI(string(body))
+	var request = struct {
+		Url string
+	}{}
+
+	err = json.Unmarshal(body, &request)
 	if err != nil {
-		c.String(http.StatusBadRequest, "specify valid url")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
+		return
+	}
+
+	parsedURL, err := url.ParseRequestURI(request.Url)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "no valid url found"})
 		return
 	}
 	key := storage.SetValueReturnKey(parsedURL.String())
 
-	c.String(http.StatusCreated, "%s://%s/%s", config.Scheme, config.Addr, key)
+	result := fmt.Sprintf("%s://%s/%s", config.Scheme, config.Addr, key)
+
+	c.JSON(http.StatusCreated, gin.H{"result": result})
 }

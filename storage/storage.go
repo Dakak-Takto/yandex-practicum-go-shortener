@@ -2,10 +2,8 @@ package storage
 
 import (
 	"errors"
-	"fmt"
-	"math/rand"
 	"sync"
-	"time"
+	"yandex-practicum-go-shortener/internal/random"
 )
 
 var storage = make(map[string]string)
@@ -33,10 +31,10 @@ func keyIsExist(key string) (isExists bool) {
 
 func generateUniqueKey() (key string) {
 	for {
-		t := uint32(time.Now().UnixMicro())
-		r := rand.Uint32()
-		key := fmt.Sprintf("%x", t+r)
+		keyLenght := 5
+		key := random.String(keyLenght)
 		if keyIsExist(key) {
+			keyLenght = keyLenght + 1
 			continue
 		}
 		return key
