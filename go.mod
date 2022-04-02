@@ -3,6 +3,7 @@ module yandex-practicum-go-shortener
 go 1.18
 
 require (
+	github.com/caarlos0/env/v6 v6.9.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/stretchr/testify v1.7.1
 )

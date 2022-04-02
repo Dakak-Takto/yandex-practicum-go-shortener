@@ -44,6 +44,6 @@ func PostHandler(c *gin.Context) {
 	}
 
 	key := storage.SetValueReturnKey(parsedURL.String())
-	result := fmt.Sprintf("%s://%s/%s", config.Scheme, config.Addr, key)
+	result := fmt.Sprintf("%s/%s", config.BaseURL, key)
 	c.JSON(http.StatusCreated, gin.H{"result": result})
 }
