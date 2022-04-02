@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -19,13 +20,19 @@ func TestHandlers(t *testing.T) {
 	var shortLink string
 
 	t.Run("Getting short link", func(t *testing.T) {
-		reader := strings.NewReader(testURL)
-		request := httptest.NewRequest(http.MethodPost, "/", reader)
+		reqBody := `{"url": "https://practicum.yandex.ru/learn/go-advanced/courses"}`
+		reader := strings.NewReader(reqBody)
+		request := httptest.NewRequest(http.MethodPost, "/api/shorten", reader)
 		response, body := testRequest(t, server, request)
 		defer response.Body.Close()
 		require.Equal(t, response.StatusCode, http.StatusCreated)
 		require.NotEmpty(t, body)
-		shortLink = body
+
+		var respJson struct{ Result string }
+		err := json.Unmarshal([]byte(body), &respJson)
+		require.NoError(t, err)
+		require.NotEmpty(t, respJson)
+		shortLink = respJson.Result
 	})
 
 	t.Run("Getting redirect", func(t *testing.T) {

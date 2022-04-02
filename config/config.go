@@ -1,6 +1,7 @@
 package config
 
 const (
-	Addr   = "localhost:8080"
-	Scheme = "http"
+	Addr    = "localhost:8080"
+	Scheme  = "http"
+	BaseURL = Scheme + "://" + Addr
 )
