@@ -71,7 +71,7 @@ jobs:
               -binary-path=cmd/shortener/shortener
 
       - name: "Code increment #5"
-        if: ${{ false }}
+        if: always()
         run: |
           SERVER_HOST=$(random domain)
           SERVER_PORT=$(random unused-port)
