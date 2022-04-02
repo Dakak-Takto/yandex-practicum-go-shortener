@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	Addr, BaseURL string
+	Addr    = "localhost:8080"
+	BaseURL = "http://localhost:8080"
 )
 
 func init() {

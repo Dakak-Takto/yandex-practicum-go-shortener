@@ -25,7 +25,7 @@ func GetHandler(c *gin.Context) {
 func PostHandler(c *gin.Context) {
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
 		return
 	}
 	var request = struct {
@@ -46,4 +46,19 @@ func PostHandler(c *gin.Context) {
 	key := storage.SetValueReturnKey(parsedURL.String())
 	result := fmt.Sprintf("%s/%s", config.BaseURL, key)
 	c.JSON(http.StatusCreated, gin.H{"result": result})
+}
+
+func LegacyPostHandler(c *gin.Context) {
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+	parsedURL, err := url.ParseRequestURI(string(body))
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+	}
+	key := storage.SetValueReturnKey(parsedURL.String())
+	result := fmt.Sprintf("%s/%s", config.BaseURL, key)
+	c.String(http.StatusCreated, result)
 }

@@ -17,6 +17,7 @@ func CreateNewServer() *gin.Engine {
 	gin.SetMode("release")
 	server := gin.Default()
 	server.GET("/:key", handlers.GetHandler)
+	server.POST("/", handlers.LegacyPostHandler)
 	server.POST("/api/shorten", handlers.PostHandler)
 	return server
 }
