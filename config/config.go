@@ -13,7 +13,7 @@ var (
 
 func init() {
 	var config struct {
-		Addr    string `env:"ADDRESS"`
+		Addr    string `env:"SERVER_ADDRESS"`
 		BaseURL string `env:"BASE_URL"`
 	}
 	err := env.Parse(&config)
