@@ -28,11 +28,11 @@ func TestHandlers(t *testing.T) {
 		require.Equal(t, response.StatusCode, http.StatusCreated)
 		require.NotEmpty(t, body)
 
-		var respJson struct{ Result string }
-		err := json.Unmarshal([]byte(body), &respJson)
+		var respJSON struct{ Result string }
+		err := json.Unmarshal([]byte(body), &respJSON)
 		require.NoError(t, err)
-		require.NotEmpty(t, respJson)
-		shortLink = respJson.Result
+		require.NotEmpty(t, respJSON)
+		shortLink = respJSON.Result
 	})
 
 	t.Run("Getting redirect", func(t *testing.T) {

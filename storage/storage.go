@@ -30,8 +30,8 @@ func keyIsExist(key string) (isExists bool) {
 }
 
 func generateUniqueKey() (key string) {
+	var keyLenght = 5
 	for {
-		keyLenght := 5
 		key := random.String(keyLenght)
 		if keyIsExist(key) {
 			keyLenght = keyLenght + 1

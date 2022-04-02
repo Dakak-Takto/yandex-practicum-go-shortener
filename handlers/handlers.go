@@ -29,7 +29,7 @@ func PostHandler(c *gin.Context) {
 		return
 	}
 	var request = struct {
-		Url string `json:"url"`
+		URL string `json:"url"`
 	}{}
 
 	err = json.Unmarshal(body, &request)
@@ -38,7 +38,7 @@ func PostHandler(c *gin.Context) {
 		return
 	}
 
-	parsedURL, err := url.ParseRequestURI(request.Url)
+	parsedURL, err := url.ParseRequestURI(request.URL)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "no valid url found"})
 	}
