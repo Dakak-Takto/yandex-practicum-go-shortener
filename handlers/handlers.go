@@ -28,9 +28,8 @@ func PostHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-
 	var request = struct {
-		Url string
+		Url string `json:"url"`
 	}{}
 
 	err = json.Unmarshal(body, &request)
@@ -42,11 +41,9 @@ func PostHandler(c *gin.Context) {
 	parsedURL, err := url.ParseRequestURI(request.Url)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "no valid url found"})
-		return
 	}
+
 	key := storage.SetValueReturnKey(parsedURL.String())
-
 	result := fmt.Sprintf("%s://%s/%s", config.Scheme, config.Addr, key)
-
 	c.JSON(http.StatusCreated, gin.H{"result": result})
 }
