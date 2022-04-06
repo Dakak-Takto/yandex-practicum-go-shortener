@@ -82,7 +82,7 @@ jobs:
               -server-base-url="http://$SERVER_HOST:$SERVER_PORT"
 
       - name: "Code increment #6"
-        if: ${{ false }}
+        if: always()
         run: |
           SERVER_PORT=$(random unused-port)
           TEMP_FILE=$(random tempfile)
