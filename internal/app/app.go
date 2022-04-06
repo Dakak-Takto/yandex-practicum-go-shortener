@@ -13,9 +13,10 @@ type Application interface {
 }
 
 type application struct {
-	store   storage.Storage
-	baseURL string
-	addr    string
+	store           storage.Storage
+	baseURL         string
+	addr            string
+	fileStoragePath string
 }
 
 func New(opts ...Option) Application {
@@ -54,5 +55,11 @@ func WithBaseURL(baseURL string) Option {
 func WithAddr(addr string) Option {
 	return func(app *application) {
 		app.addr = addr
+	}
+}
+
+func WithFileStoragePath(fileStoragePath string) Option {
+	return func(app *application) {
+		app.fileStoragePath = fileStoragePath
 	}
 }
