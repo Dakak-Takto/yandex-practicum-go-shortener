@@ -3,7 +3,6 @@ package storage
 import (
 	"errors"
 	"sync"
-	"time"
 )
 
 type Storage interface {
@@ -40,7 +39,6 @@ func (s *storage) Set(key, value string) {
 
 func (s *storage) IsExist(key string) (isExists bool) {
 	_, isExists = s.urls[key]
-	time.Sleep(time.Second * 2)
 	return isExists
 }
 
