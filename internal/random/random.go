@@ -1,56 +1,60 @@
 package random
 
 import (
-	"math/rand"
-	"time"
+	"crypto/rand"
+	"log"
+	"math/big"
 )
-
-const (
-	digits     = "0123456789"
-	consonants = "bcdfghjklmnpqrstvwxz"
-	vowel      = "aeiouy"
-)
-
-func init() {
-	rand.Seed(time.Now().UnixMicro())
-}
 
 func String(lenght int) string {
 
-	var word = make([]byte, lenght)
-	var vovelFlag = rand.Intn(2)
+	var word = make([]rune, lenght)
+
+	var cFlag = randomBool()
+
 	for i := 0; i < lenght; i++ {
-		if vovelFlag > 0 {
+		if cFlag {
 			word[i] = randomConsonant()
-			vovelFlag = 0
+			cFlag = false
 		} else {
 			word[i] = randomVowel()
-			vovelFlag = 1
-		}
-	}
-
-	var uppercaseCount = 1
-	for i := 0; i < lenght; i++ {
-		if uppercaseCount == 0 {
-			break
-		}
-		if rand.Intn(2) > 0 {
-			word[i] = word[i] - 32
-			uppercaseCount = uppercaseCount - 1
+			cFlag = true
 		}
 	}
 
 	return string(word)
 }
 
-func randomDigit() byte {
-	return digits[rand.Intn(len(digits))]
+func randomDigit() rune {
+	return rune(randomInt(9))
 }
 
-func randomConsonant() byte {
-	return consonants[rand.Intn(len(consonants))]
+func randomBool() bool {
+	return randomInt(100) > 50
 }
 
-func randomVowel() byte {
-	return vowel[rand.Intn(len(vowel))]
+func randomConsonant() rune {
+	var consonants = []rune("bcdfghjklmnpqrstvwxz")
+	var lenght = len(consonants)
+	var n = randomInt(lenght)
+
+	return consonants[n]
+}
+
+func randomVowel() rune {
+	var vowel = []rune("aeiouy")
+	var lenght = len(vowel)
+	var n = randomInt(lenght)
+
+	return vowel[n]
+}
+
+func randomInt(n int) int {
+	var max = int64(n)
+	nBig, err := rand.Int(rand.Reader, big.NewInt(max))
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return int(nBig.Int64())
 }

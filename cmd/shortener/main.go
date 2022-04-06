@@ -2,22 +2,31 @@ package main
 
 import (
 	"log"
-	"yandex-practicum-go-shortener/config"
-	"yandex-practicum-go-shortener/handlers"
 
-	"github.com/gin-gonic/gin"
+	"github.com/caarlos0/env/v6"
+
+	"yandex-practicum-go-shortener/internal/app"
+	"yandex-practicum-go-shortener/internal/storage"
 )
 
-func main() {
-	server := CreateNewServer()
-	log.Fatal(server.Run(config.Addr))
+var cfg struct {
+	Addr    string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	BaseURL string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 }
 
-func CreateNewServer() *gin.Engine {
-	gin.SetMode("release")
-	server := gin.Default()
-	server.GET("/:key", handlers.GetHandler)
-	server.POST("/", handlers.LegacyPostHandler)
-	server.POST("/api/shorten", handlers.PostHandler)
-	return server
+func main() {
+
+	var err = env.Parse(&cfg)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	app := app.New(
+		app.WithStorage(storage.New()),
+		app.WithBaseURL(cfg.BaseURL),
+		app.WithAddr(cfg.Addr),
+	)
+
+	log.Fatal(app.Run())
 }
