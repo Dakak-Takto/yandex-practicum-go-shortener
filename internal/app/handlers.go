@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -22,6 +21,8 @@ func (app *application) GetHandler(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
+	c.Header("Location", url)
+	c.Status(http.StatusTemporaryRedirect)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
@@ -49,12 +50,7 @@ func (app *application) PostHandler(c *gin.Context) {
 	app.store.Lock()
 	defer app.store.Unlock()
 
-	key, err := app.generateKey(keyLenghtStart)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "something went wrong"})
-		log.Println(err)
-		return
-	}
+	key := app.generateKey(keyLenghtStart)
 
 	app.store.Set(key, parsedURL.String())
 
@@ -78,13 +74,7 @@ func (app *application) LegacyPostHandler(c *gin.Context) {
 	app.store.Lock()
 	defer app.store.Unlock()
 
-	key, err := app.generateKey(keyLenghtStart)
-
-	if err != nil {
-		c.String(http.StatusBadRequest, "something went wrong")
-		log.Println(err)
-		return
-	}
+	key := app.generateKey(keyLenghtStart)
 
 	app.store.Set(key, parsedURL.String())
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
