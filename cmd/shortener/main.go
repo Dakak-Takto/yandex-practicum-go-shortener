@@ -12,7 +12,7 @@ import (
 var cfg struct {
 	Addr            string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"urls.json"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 }
 
 func main() {
@@ -23,7 +23,11 @@ func main() {
 		log.Println(err)
 	}
 
-	store := inmem.New(inmem.WithDumpFile("urls.json"))
+	store := inmem.New()
+
+	if cfg.FileStoragePath != "" {
+		store = inmem.New(inmem.WithDumpFile(cfg.FileStoragePath))
+	}
 
 	app := app.New(
 		app.WithStorage(store),
