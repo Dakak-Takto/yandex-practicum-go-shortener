@@ -11,12 +11,10 @@ func TestStorage(t *testing.T) {
 
 		testStorage := New()
 
-		testValue := "test string content"
-
 		testStorage.Set("key", "value")
 
 		value, err := testStorage.Get("key")
 		require.NoError(t, err)
-		require.Equal(t, value, testValue)
+		require.Equal(t, value, "value")
 	})
 }
