@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -20,11 +19,8 @@ func (app *application) GetHandler(c *gin.Context) {
 	url, err := app.store.Get(key)
 	if err != nil {
 		c.AbortWithStatus(http.StatusNotFound)
-		log.Println(err)
 		return
 	}
-	c.Header("Location", url)
-	c.Status(http.StatusTemporaryRedirect)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
