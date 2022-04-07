@@ -20,7 +20,7 @@ func New() storage.Storage {
 	}
 }
 
-func (s *store) Get(key string) (value string, err error) {
+func (s *store) Get(key string) (string, error) {
 	if value, ok := s.urls[key]; ok {
 		return value, nil
 	}
