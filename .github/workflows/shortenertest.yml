@@ -93,7 +93,7 @@ jobs:
               -source-path=.
 
       - name: "Code increment #7"
-        if: ${{ false }}
+        if: always()
         run: |
           SERVER_PORT=$(random unused-port)
           TEMP_FILE=$(random tempfile)

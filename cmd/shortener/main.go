@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"log"
-
-	"github.com/caarlos0/env/v6"
+	"os"
 
 	"yandex-practicum-go-shortener/internal/app"
 	"yandex-practicum-go-shortener/internal/storage"
@@ -12,18 +12,20 @@ import (
 )
 
 var cfg struct {
-	Addr            string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
-	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH"` //TODO DELETE DEFAULT!
+	Addr            string
+	BaseURL         string
+	FileStoragePath string
+}
+
+func init() {
+	flag.StringVar(&cfg.Addr, "a", os.Getenv("SERVER_ADDRESS"), "host:port")
+	flag.StringVar(&cfg.BaseURL, "b", os.Getenv("BASE_URL"), "ex: http://example.com")
+	flag.StringVar(&cfg.FileStoragePath, "f", os.Getenv("FILE_STORAGE_PATH"), "ex: /path/to/file")
 }
 
 func main() {
 
-	var err = env.Parse(&cfg)
-
-	if err != nil {
-		log.Println(err)
-	}
+	flag.Parse()
 
 	var store storage.Storage
 
@@ -41,3 +43,11 @@ func main() {
 
 	log.Fatal(app.Run())
 }
+
+/*
+Поддержите конфигурирование сервиса с помощью флагов командной строки наравне с уже имеющимися переменными окружения:
+
+    флаг -a, отвечающий за адрес запуска HTTP-сервера (переменная SERVER_ADDRESS);
+    флаг -b, отвечающий за базовый адрес результирующего сокращённого URL (переменная BASE_URL);
+    флаг -f, отвечающий за путь до файла с сокращёнными URL (переменная FILE_STORAGE_PATH).
+*/
