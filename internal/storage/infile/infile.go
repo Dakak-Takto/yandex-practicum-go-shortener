@@ -27,6 +27,7 @@ func New(filepath string) storage.Storage {
 	return &store{
 		file:   file,
 		reader: bufio.NewReader(file),
+		writer: bufio.NewWriter(file),
 	}
 }
 
