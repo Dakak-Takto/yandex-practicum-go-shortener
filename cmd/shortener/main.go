@@ -6,6 +6,8 @@ import (
 	"github.com/caarlos0/env/v6"
 
 	"yandex-practicum-go-shortener/internal/app"
+	"yandex-practicum-go-shortener/internal/storage"
+	"yandex-practicum-go-shortener/internal/storage/infile"
 	"yandex-practicum-go-shortener/internal/storage/inmem"
 )
 
@@ -23,10 +25,12 @@ func main() {
 		log.Println(err)
 	}
 
-	store := inmem.New()
+	var store storage.Storage
 
 	if cfg.FileStoragePath != "" {
-		store = inmem.New(inmem.WithDumpFile(cfg.FileStoragePath))
+		store = infile.New(cfg.FileStoragePath)
+	} else {
+		store = inmem.New()
 	}
 
 	app := app.New(
