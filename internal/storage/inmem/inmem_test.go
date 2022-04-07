@@ -20,7 +20,7 @@ func TestInmem(t *testing.T) {
 
 	t.Run("Read storage test", func(t *testing.T) {
 		var s = New()
-		err := s.Set("test-key", "test-value")
+		s.Set("test-key", "test-value")
 		v, err := s.Get("test-key")
 		require.NoError(t, err)
 		require.Equal(t, "test-value", v)
