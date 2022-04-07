@@ -3,7 +3,8 @@ package main
 import (
 	"flag"
 	"log"
-	"os"
+
+	"github.com/caarlos0/env/v6"
 
 	"yandex-practicum-go-shortener/internal/app"
 	"yandex-practicum-go-shortener/internal/storage"
@@ -12,19 +13,20 @@ import (
 )
 
 var cfg struct {
-	Addr            string
-	BaseURL         string
-	FileStoragePath string
-}
-
-func init() {
-	flag.StringVar(&cfg.Addr, "a", os.Getenv("SERVER_ADDRESS"), "host:port")
-	flag.StringVar(&cfg.BaseURL, "b", os.Getenv("BASE_URL"), "ex: http://example.com")
-	flag.StringVar(&cfg.FileStoragePath, "f", os.Getenv("FILE_STORAGE_PATH"), "ex: /path/to/file")
+	Addr            string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
+	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"` //TODO DELETE DEFAULT!
 }
 
 func main() {
+	var err = env.Parse(&cfg)
+	if err != nil {
+		log.Println(err)
+	}
 
+	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
+	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
 	flag.Parse()
 
 	var store storage.Storage
