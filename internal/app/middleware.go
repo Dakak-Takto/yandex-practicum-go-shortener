@@ -1,54 +1,30 @@
 package app
 
 import (
-	"bytes"
 	"compress/gzip"
-	"io"
-	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
-
-	"github.com/gin-gonic/gin"
 )
 
-type gzipWriter struct {
-	gin.ResponseWriter
-	writer io.Writer
-}
+func (app *application) decompress(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-func (w gzipWriter) Write(b []byte) (int, error) {
-	return w.writer.Write(b)
-}
-
-func (w gzipWriter) WriteString(s string) (int, error) {
-	return w.writer.Write([]byte(s))
-}
-
-func gzipMiddleware(c *gin.Context) {
-
-	if strings.Contains(c.Request.Header.Get("Accept-Encoding"), "gzip") {
-		c.Header("Content-Encoding", "gzip")
-		writer, err := gzip.NewWriterLevel(c.Writer, gzip.BestCompression)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer writer.Close()
-
-		c.Writer = gzipWriter{ResponseWriter: c.Writer, writer: writer}
-	}
-
-	if strings.Contains(c.Request.Header.Get("Content-Encoding"), "gzip") {
-		reader, err := gzip.NewReader(c.Request.Body)
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
 			return
 		}
-		defer reader.Close()
-		body, _ := ioutil.ReadAll(reader)
 
-		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
-	}
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// не забывайте потом закрыть *gzip.Reader
+		defer gz.Close()
 
-	c.Next()
+		r.Body = gz
+
+		next.ServeHTTP(w, r)
+
+	})
 }

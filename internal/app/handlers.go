@@ -4,46 +4,49 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/render"
 )
+
+type jsonResponse map[string]string
 
 const (
 	keyLenghtStart = 8
 )
 
-func (app *application) GetHandler(c *gin.Context) {
-	key := c.Param("key")
+func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
+	key := chi.URLParam(r, "key")
 	url, err := app.store.Get(key)
 	if err != nil {
-		c.AbortWithStatus(http.StatusNotFound)
+		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-func (app *application) PostHandler(c *gin.Context) {
+func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
-	body, err := io.ReadAll(c.Request.Body)
-	if err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
+	body, _ := io.ReadAll(r.Body)
+
 	var request = struct {
 		URL string `json:"url"`
 	}{}
 
-	err = json.Unmarshal(body, &request)
+	log.Println(string(body))
+
+	err := json.Unmarshal(body, &request)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "no valid json found"})
+		render.JSON(w, r, jsonResponse{"error": "no valid json found"})
 		return
 	}
 
 	parsedURL, err := url.ParseRequestURI(request.URL)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "no valid url found"})
+		render.JSON(w, r, jsonResponse{"error": "no valid url found"})
 	}
 
 	app.store.Lock()
@@ -54,20 +57,22 @@ func (app *application) PostHandler(c *gin.Context) {
 	app.store.Set(key, parsedURL.String())
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
-	c.JSON(http.StatusCreated, gin.H{"result": result})
+
+	render.JSON(w, r, jsonResponse{"result": result})
+	w.WriteHeader(http.StatusCreated)
 }
 
-func (app *application) LegacyPostHandler(c *gin.Context) {
+func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	body, err := io.ReadAll(c.Request.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	parsedURL, err := url.ParseRequestURI(string(body))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -78,5 +83,6 @@ func (app *application) LegacyPostHandler(c *gin.Context) {
 
 	app.store.Set(key, parsedURL.String())
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
-	c.String(http.StatusCreated, result)
+	render.PlainText(w, r, result)
+	w.WriteHeader(http.StatusCreated)
 }

@@ -1,9 +1,12 @@
 package app
 
 import (
+	"compress/gzip"
 	"log"
+	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
 	"yandex-practicum-go-shortener/internal/storage"
 )
@@ -28,21 +31,19 @@ func New(opts ...Option) Application {
 }
 
 func (app *application) Run() error {
-	gin.SetMode("release")
 
-	server := gin.New()
+	r := chi.NewRouter()
 
-	//middlewares
-	server.Use(gin.Logger())
-	server.Use(gzipMiddleware)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
+	r.Use(app.decompress)
 
-	//handlers
-	server.GET("/:key", app.GetHandler)
-	server.POST("/", app.LegacyPostHandler)
-	server.POST("/api/shorten", app.PostHandler)
+	r.Get("/{key}", app.GetHandler)
+	r.Post("/", app.LegacyPostHandler)
+	r.Post("/api/shorten", app.PostHandler)
 
 	log.Printf("Run app on %s", app.addr)
-	return server.Run(app.addr)
+	return http.ListenAndServe(app.addr, r)
 }
 
 type Option func(app *application)
