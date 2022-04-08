@@ -28,13 +28,13 @@ func New(opts ...Option) Application {
 }
 
 func (app *application) Run() error {
-	gin.SetMode("test")
+	gin.SetMode("release")
 
 	server := gin.New()
 
 	//middlewares
 	server.Use(gin.Logger())
-	server.Use(gzipMiddleware())
+	server.Use(gzipMiddleware)
 
 	//handlers
 	server.GET("/:key", app.GetHandler)

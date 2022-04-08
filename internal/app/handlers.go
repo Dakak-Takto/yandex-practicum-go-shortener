@@ -25,9 +25,10 @@ func (app *application) GetHandler(c *gin.Context) {
 }
 
 func (app *application) PostHandler(c *gin.Context) {
+
 	body, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	var request = struct {
@@ -67,6 +68,7 @@ func (app *application) LegacyPostHandler(c *gin.Context) {
 	parsedURL, err := url.ParseRequestURI(string(body))
 	if err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
+		return
 	}
 
 	app.store.Lock()

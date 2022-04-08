@@ -1,8 +1,11 @@
 package app
 
 import (
+	"bytes"
 	"compress/gzip"
 	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -11,42 +14,41 @@ import (
 
 type gzipWriter struct {
 	gin.ResponseWriter
-	Writer io.Writer
+	writer io.Writer
 }
 
-func (w gzipWriter) write(b []byte) (int, error) {
-	return w.Writer.Write(b)
+func (w gzipWriter) Write(b []byte) (int, error) {
+	return w.writer.Write(b)
 }
 
-func gzipMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func (w gzipWriter) WriteString(s string) (int, error) {
+	return w.writer.Write([]byte(s))
+}
 
-		if !strings.Contains(c.Request.Header.Get("Accept-Encoding"), "gzip") {
-			c.Next()
-			return
-		}
-		gz, err := gzip.NewWriterLevel(c.Writer, gzip.BestSpeed)
+func gzipMiddleware(c *gin.Context) {
+
+	if strings.Contains(c.Request.Header.Get("Accept-Encoding"), "gzip") {
+		c.Header("Content-Encoding", "gzip")
+		writer, err := gzip.NewWriterLevel(c.Writer, gzip.BestCompression)
 		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-			return
+			log.Fatal(err)
 		}
-		defer gz.Close()
-		c.Writer.Header().Set("Content-Encoding", "gzip")
+		defer writer.Close()
 
-		c.Writer = gzipWriter{ResponseWriter: c.Writer, Writer: gz}
+		c.Writer = gzipWriter{ResponseWriter: c.Writer, writer: writer}
+	}
 
-		if !strings.Contains(c.Request.Header.Get("Content-Encoding"), "gzip") {
-			c.Next()
-			return
-		}
-
+	if strings.Contains(c.Request.Header.Get("Content-Encoding"), "gzip") {
 		reader, err := gzip.NewReader(c.Request.Body)
 		if err != nil {
 			c.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 		defer reader.Close()
-		c.Request.Body = reader
-		c.Next()
+		body, err := ioutil.ReadAll(reader)
+
+		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 	}
+
+	c.Next()
 }
