@@ -31,7 +31,12 @@ func (app *application) Run() error {
 	gin.SetMode("test")
 
 	server := gin.New()
+
+	//middlewares
 	server.Use(gin.Logger())
+	server.Use(Gzip())
+
+	//handlers
 	server.GET("/:key", app.GetHandler)
 	server.POST("/", app.LegacyPostHandler)
 	server.POST("/api/shorten", app.PostHandler)

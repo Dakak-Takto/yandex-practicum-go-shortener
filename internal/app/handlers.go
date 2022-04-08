@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	keyLenghtStart = 5
+	keyLenghtStart = 8
 )
 
 func (app *application) GetHandler(c *gin.Context) {
