@@ -34,7 +34,7 @@ func (app *application) Run() error {
 
 	//middlewares
 	server.Use(gin.Logger())
-	server.Use(Gzip())
+	server.Use(gzipMiddleware())
 
 	//handlers
 	server.GET("/:key", app.GetHandler)

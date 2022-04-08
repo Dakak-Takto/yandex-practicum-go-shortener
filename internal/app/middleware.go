@@ -14,11 +14,11 @@ type gzipWriter struct {
 	Writer io.Writer
 }
 
-func (w gzipWriter) Write(b []byte) (int, error) {
+func (w gzipWriter) write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
-func Gzip() gin.HandlerFunc {
+func gzipMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		if !strings.Contains(c.Request.Header.Get("Accept-Encoding"), "gzip") {
