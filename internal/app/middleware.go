@@ -45,7 +45,7 @@ func gzipMiddleware(c *gin.Context) {
 			return
 		}
 		defer reader.Close()
-		body, err := ioutil.ReadAll(reader)
+		body, _ := ioutil.ReadAll(reader)
 
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 	}
