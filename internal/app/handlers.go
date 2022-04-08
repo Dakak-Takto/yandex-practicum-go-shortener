@@ -40,12 +40,14 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.Unmarshal(body, &request)
 	if err != nil {
+		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, jsonResponse{"error": "no valid json found"})
 		return
 	}
 
 	parsedURL, err := url.ParseRequestURI(request.URL)
 	if err != nil {
+		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, jsonResponse{"error": "no valid url found"})
 	}
 
@@ -58,8 +60,8 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
+	render.Status(r, http.StatusCreated)
 	render.JSON(w, r, jsonResponse{"result": result})
-	w.WriteHeader(http.StatusCreated)
 }
 
 func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request) {
@@ -83,6 +85,7 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 
 	app.store.Set(key, parsedURL.String())
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
+
+	render.Status(r, http.StatusCreated)
 	render.PlainText(w, r, result)
-	w.WriteHeader(http.StatusCreated)
 }
