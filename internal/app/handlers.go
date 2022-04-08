@@ -18,6 +18,7 @@ const (
 	keyLenghtStart = 8
 )
 
+//search exist short url in storage,return temporary redirect if found
 func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 	url, err := app.store.Get(key)
@@ -28,6 +29,7 @@ func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
+//accept json, make short url, write in storage, return short url
 func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := io.ReadAll(r.Body)
@@ -64,6 +66,7 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, jsonResponse{"result": result})
 }
 
+//accept text/plain body with url, make short url, write in storage, return short url in body
 func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, err := io.ReadAll(r.Body)

@@ -1,3 +1,4 @@
+//Used for file storage. Making file and write url per line
 package infile
 
 import (

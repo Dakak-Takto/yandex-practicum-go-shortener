@@ -14,17 +14,15 @@ func (app *application) decompress(next http.Handler) http.Handler {
 			return
 		}
 
-		gz, err := gzip.NewReader(r.Body)
+		gzReader, err := gzip.NewReader(r.Body)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		// не забывайте потом закрыть *gzip.Reader
-		defer gz.Close()
+		defer gzReader.Close()
 
-		r.Body = gz
+		r.Body = gzReader
 
 		next.ServeHTTP(w, r)
-
 	})
 }

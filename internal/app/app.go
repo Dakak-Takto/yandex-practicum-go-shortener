@@ -16,10 +16,9 @@ type Application interface {
 }
 
 type application struct {
-	store           storage.Storage
-	baseURL         string
-	addr            string
-	fileStoragePath string
+	store   storage.Storage
+	baseURL string
+	addr    string
 }
 
 func New(opts ...Option) Application {
@@ -32,40 +31,44 @@ func New(opts ...Option) Application {
 
 func (app *application) Run() error {
 
-	r := chi.NewRouter()
+	router := chi.NewRouter()
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
-	r.Use(app.decompress)
+	//Middlewares
+	router.Use(middleware.Logger)
+	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
+	router.Use(app.decompress)
 
-	r.Get("/{key}", app.GetHandler)
-	r.Post("/", app.LegacyPostHandler)
-	r.Post("/api/shorten", app.PostHandler)
+	//Routes
+	router.Get("/{key}", app.GetHandler)
+	router.Post("/", app.LegacyPostHandler)
+	router.Post("/api/shorten", app.PostHandler)
 
+	//Run
 	log.Printf("Run app on %s", app.addr)
-	return http.ListenAndServe(app.addr, r)
+	return http.ListenAndServe(app.addr, router)
 }
+
+//Application option declaration
 
 type Option func(app *application)
 
+//add storage to application
 func WithStorage(storage storage.Storage) Option {
 	return func(app *application) {
 		app.store = storage
 	}
 }
+
+//change application base_url
 func WithBaseURL(baseURL string) Option {
 	return func(app *application) {
 		app.baseURL = baseURL
 	}
 }
+
+//change http server addr
 func WithAddr(addr string) Option {
 	return func(app *application) {
 		app.addr = addr
-	}
-}
-
-func WithFileStoragePath(fileStoragePath string) Option {
-	return func(app *application) {
-		app.fileStoragePath = fileStoragePath
 	}
 }
