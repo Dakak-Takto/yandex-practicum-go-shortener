@@ -32,15 +32,16 @@ func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
 //accept json, make short url, write in storage, return short url
 func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var request = struct {
 		URL string `json:"url"`
 	}{}
 
-	log.Println(string(body))
-
-	err := json.Unmarshal(body, &request)
+	err = json.Unmarshal(body, &request)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, jsonResponse{"error": "no valid json found"})

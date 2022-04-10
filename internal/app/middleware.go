@@ -19,7 +19,12 @@ func (app *application) decompress(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		defer gzReader.Close()
+
+		err = gzReader.Close()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 
 		r.Body = gzReader
 

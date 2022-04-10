@@ -1,7 +1,6 @@
 package random
 
 import (
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -23,6 +22,5 @@ func TestString(t *testing.T) {
 			result = append(result, str)
 			require.NotContains(t, str, result)
 		}
-		log.Println(result)
 	})
 }

@@ -20,16 +20,17 @@ type store struct {
 
 var _ storage.Storage = (*store)(nil)
 
-func New(filepath string) storage.Storage {
+func New(filepath string) (storage.Storage, error) {
 	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return &store{
 		file:   file,
 		reader: bufio.NewReader(file),
 		writer: bufio.NewWriter(file),
-	}
+	}, nil
 }
 
 func (s *store) Get(key string) (value string, err error) {

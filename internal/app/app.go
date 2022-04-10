@@ -45,7 +45,13 @@ func (app *application) Run() error {
 
 	//Run
 	log.Printf("Run app on %s", app.addr)
-	return http.ListenAndServe(app.addr, router)
+
+	//Http server
+	server := http.Server{}
+	server.Addr = app.addr
+	server.Handler = router
+
+	return server.ListenAndServe()
 }
 
 //Application option declaration

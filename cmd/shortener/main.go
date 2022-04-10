@@ -19,25 +19,21 @@ var cfg struct {
 }
 
 func main() {
-	//Parse env
-	var err = env.Parse(&cfg)
-	if err != nil {
-		log.Println(err)
-	}
 
-	//parse flags
-	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
-	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
-	flag.Parse()
+	processEnv()
+	processFlags()
 
 	//Create storage instance
 	var store storage.Storage
+	var err error
 
 	if cfg.FileStoragePath != "" {
-		store = infile.New(cfg.FileStoragePath)
+		store, err = infile.New(cfg.FileStoragePath)
 	} else {
-		store = inmem.New()
+		store, err = inmem.New()
+	}
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	//Create app instance
@@ -49,4 +45,18 @@ func main() {
 
 	//Run app
 	log.Fatal(app.Run())
+}
+
+func processEnv() {
+	var err = env.Parse(&cfg)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func processFlags() {
+	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
+	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
+	flag.Parse()
 }

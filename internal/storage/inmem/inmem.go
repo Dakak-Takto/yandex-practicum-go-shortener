@@ -13,11 +13,11 @@ type store struct {
 
 var _ storage.Storage = (*store)(nil)
 
-func New() storage.Storage {
+func New() (storage.Storage, error) {
 
 	return &store{
 		urls: make(map[string]string),
-	}
+	}, nil
 }
 
 func (s *store) Get(key string) (string, error) {
@@ -46,4 +46,8 @@ func (s *store) Lock() {
 
 func (s *store) Unlock() {
 	s.urlsMutex.Unlock()
+}
+
+func (s *store) Destroy() error {
+	return errors.New("not implemented")
 }
