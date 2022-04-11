@@ -4,7 +4,6 @@ package infile
 import (
 	"bufio"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -23,7 +22,7 @@ var _ storage.Storage = (*store)(nil)
 func New(filepath string) (storage.Storage, error) {
 	file, err := os.OpenFile(filepath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
-		log.Fatal(err)
+		return &store{}, err
 	}
 
 	return &store{
@@ -55,8 +54,7 @@ func (s *store) Set(key, value string) (err error) {
 	if err != nil {
 		return err
 	}
-	s.writer.Flush()
-	return nil
+	return s.writer.Flush()
 }
 
 func (s *store) IsExist(key string) bool {
