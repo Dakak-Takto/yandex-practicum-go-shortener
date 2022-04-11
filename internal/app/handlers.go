@@ -12,7 +12,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-type jsonResponse map[string]string
+type simpleJSONResponse map[string]string
 
 const (
 	keyLenghtStart = 8
@@ -37,21 +37,21 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	var request = struct {
+	var request struct {
 		URL string `json:"url"`
-	}{}
+	}
 
 	err = json.Unmarshal(body, &request)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, jsonResponse{"error": "no valid json found"})
+		render.JSON(w, r, simpleJSONResponse{"error": "no valid json found"})
 		return
 	}
 
 	parsedURL, err := url.ParseRequestURI(request.URL)
 	if err != nil {
 		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, jsonResponse{"error": "no valid url found"})
+		render.JSON(w, r, simpleJSONResponse{"error": "no valid url found"})
 	}
 
 	app.store.Lock()
@@ -64,7 +64,7 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
 	render.Status(r, http.StatusCreated)
-	render.JSON(w, r, jsonResponse{"result": result})
+	render.JSON(w, r, simpleJSONResponse{"result": result})
 }
 
 //accept text/plain body with url, make short url, write in storage, return short url in body
