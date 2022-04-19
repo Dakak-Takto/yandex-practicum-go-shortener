@@ -24,21 +24,14 @@ func TestInFile(t *testing.T) {
 		writer: bufio.NewWriter(file),
 	}
 
-	t.Run("Write storage test", func(t *testing.T) {
-		s.Lock()
-		defer s.Unlock()
-		err = s.Set("test-key", "test-value")
-		require.NoError(t, err)
-	})
-
 	t.Run("Read storage test", func(t *testing.T) {
 		s.Lock()
 		defer s.Unlock()
-		s.Set("test-key", "test-value")
-		v, err := s.Get("test-key")
+		s.Insert("test-key", "test-value")
+		v, err := s.First("test-key")
 
 		require.NoError(t, err)
-		require.Equal(t, "test-value", v)
+		require.Equal(t, "test-value", v.Value)
 	})
 
 	if err := s.file.Close(); err != nil {

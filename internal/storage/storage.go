@@ -1,9 +1,14 @@
 package storage
 
 type Storage interface {
-	Get(key string) (string, error)
-	Set(key, value string) error
+	First(key string) (Entity, error)
+	Get(key string) []Entity
+	Insert(key, value string)
 	IsExist(key string) bool
 	Lock()
 	Unlock()
+}
+
+type Entity struct {
+	Key, Value string
 }

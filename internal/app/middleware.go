@@ -3,13 +3,17 @@ package app
 import (
 	"compress/gzip"
 	"context"
-	"encoding/binary"
-	"fmt"
-	"log"
+	"encoding/hex"
 	"net/http"
 	"strings"
 	"yandex-practicum-go-shortener/internal/random"
 )
+
+type uidContext string
+
+func (u *uidContext) String() string {
+	return string(*u)
+}
 
 func (app *application) decompress(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -41,10 +45,10 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if cookie, err := r.Cookie("token"); err == nil {
-			log.Printf("token: %x", cookie)
 			value := make(map[string]string)
 			if err := app.secureCookie.Decode("token", cookie.Value, &value); err == nil {
-				ctx := context.WithValue(context.Background(), "uid", value["uid"])
+
+				ctx := context.WithValue(r.Context(), uidContext("uid"), uidContext(value["uid"]))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			}
@@ -55,10 +59,10 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 			http.Error(w, "something went wrong", http.StatusInternalServerError)
 			return
 		}
-		uid := binary.BigEndian.Uint64(uidBytes)
+		uid := hex.EncodeToString(uidBytes)
 
 		value := map[string]string{
-			"uid": fmt.Sprintf("%d", uid),
+			"uid": uid,
 		}
 
 		if encoded, err := app.secureCookie.Encode("token", value); err == nil {
@@ -69,9 +73,9 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 				Secure:   true,
 				HttpOnly: true,
 			}
-			log.Printf("set cookie: %v", cookie)
 			http.SetCookie(w, cookie)
-			ctx := context.WithValue(context.Background(), string("uid"), value["uid"])
+
+			ctx := context.WithValue(r.Context(), uidContext("uid"), uidContext(uid))
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}

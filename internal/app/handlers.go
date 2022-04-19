@@ -19,16 +19,60 @@ const (
 //search exist short url in storage,return temporary redirect if found
 func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
-	url, err := app.store.Get(key)
+	url, err := app.store.First(key)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, url.Value, http.StatusTemporaryRedirect)
+}
+
+func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
+
+	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+
+	if !ok {
+		render.Status(r, http.StatusUnauthorized)
+		render.JSON(w, r, render.M{"error": "not authorized"})
+		return
+	}
+
+	urls := app.store.Get(string(uid))
+
+	if urls == nil {
+		render.NoContent(w, r)
+		return
+	}
+
+	type item struct {
+		Short    string `json:"short_rl"`
+		Original string `json:"original_url"`
+	}
+
+	var result []item
+	for _, u := range urls {
+		u, err := app.store.First(u.Value)
+		if err != nil {
+			continue
+		}
+		result = append(result, item{
+			Short:    fmt.Sprintf("%s/%s", app.baseURL, u.Key),
+			Original: u.Value,
+		})
+	}
+	render.JSON(w, r, result)
 }
 
 //accept json, make short url, write in storage, return short url
 func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
+
+	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+
+	if !ok {
+		render.Status(r, http.StatusUnauthorized)
+		render.JSON(w, r, render.M{"error": "not authorized"})
+		return
+	}
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -57,7 +101,8 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	key := app.generateKey(keyLenghtStart)
 
-	app.store.Set(key, parsedURL.String())
+	app.store.Insert(key, parsedURL.String())
+	app.store.Insert(string(uid), key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
@@ -85,7 +130,7 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 
 	key := app.generateKey(keyLenghtStart)
 
-	app.store.Set(key, parsedURL.String())
+	app.store.Insert(key, parsedURL.String())
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
 	render.Status(r, http.StatusCreated)

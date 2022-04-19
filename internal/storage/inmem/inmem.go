@@ -3,51 +3,57 @@ package inmem
 import (
 	"errors"
 	"sync"
+
 	"yandex-practicum-go-shortener/internal/storage"
 )
 
 type store struct {
-	urlsMutex sync.Mutex
-	urls      map[string]string
+	dataMutex sync.Mutex
+	data      []storage.Entity
 }
 
 var _ storage.Storage = (*store)(nil)
 
 func New() (storage.Storage, error) {
 
-	return &store{
-		urls: make(map[string]string),
-	}, nil
+	return &store{}, nil
 }
 
-func (s *store) Get(key string) (string, error) {
-	if value, ok := s.urls[key]; ok {
-		return value, nil
+func (s *store) First(key string) (storage.Entity, error) {
+	for _, entity := range s.data {
+		if entity.Key == key {
+			return entity, nil
+		}
 	}
-
-	return "", errors.New("not found")
+	return storage.Entity{}, errors.New("notFoundError")
 }
 
-func (s *store) Set(key, value string) error {
-	s.urls[key] = value
-
-	return nil
+func (s *store) Get(key string) []storage.Entity {
+	var result []storage.Entity
+	for _, entity := range s.data {
+		if entity.Key == key {
+			result = append(result, entity)
+		}
+	}
+	return result
 }
 
-func (s *store) IsExist(key string) (isExists bool) {
-	_, isExists = s.urls[key]
+func (s *store) Insert(key, value string) {
+	s.data = append(s.data, storage.Entity{
+		Key:   key,
+		Value: value,
+	})
+}
 
-	return isExists
+func (s *store) IsExist(key string) bool {
+	_, err := s.First(key)
+	return err == nil
 }
 
 func (s *store) Lock() {
-	s.urlsMutex.Lock()
+	s.dataMutex.Lock()
 }
 
 func (s *store) Unlock() {
-	s.urlsMutex.Unlock()
-}
-
-func (s *store) Destroy() error {
-	return errors.New("not implemented")
+	s.dataMutex.Unlock()
 }

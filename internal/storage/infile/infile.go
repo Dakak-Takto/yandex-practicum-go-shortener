@@ -3,7 +3,9 @@ package infile
 
 import (
 	"bufio"
+	"errors"
 	"io"
+	"log"
 	"os"
 	"strings"
 	"sync"
@@ -32,33 +34,58 @@ func New(filepath string) (storage.Storage, error) {
 	}, nil
 }
 
-func (s *store) Get(key string) (value string, err error) {
+func (s *store) First(key string) (storage.Entity, error) {
+
 	s.file.Seek(0, io.SeekStart)
 	for {
 		b, _, err := s.reader.ReadLine()
 		if err != nil {
-			return "", err
+			break
+		}
+		record := strings.Split(string(b), ",")
+		if key == record[0] {
+			return storage.Entity{
+				Key:   record[0],
+				Value: record[1],
+			}, nil
+		}
+	}
+	return storage.Entity{}, errors.New("errNotFound")
+}
+
+func (s *store) Get(key string) []storage.Entity {
+	var result []storage.Entity
+
+	s.file.Seek(0, io.SeekStart)
+	for {
+		b, _, err := s.reader.ReadLine()
+		if err != nil {
+			break
 		}
 		record := strings.Split(string(b), ",")
 		if record[0] == key {
-			return record[1], nil
+			result = append(result, storage.Entity{
+				Key:   key,
+				Value: record[1],
+			})
 		}
 	}
+	return result
 }
 
-func (s *store) Set(key, value string) (err error) {
+func (s *store) Insert(key, value string) {
 	s.file.Seek(0, io.SeekEnd)
 	record := []string{key, value}
 
-	_, err = s.writer.WriteString(strings.Join(record, ",") + "\n")
+	_, err := s.writer.WriteString(strings.Join(record, ",") + "\n")
 	if err != nil {
-		return err
+		log.Println(err)
 	}
-	return s.writer.Flush()
+	s.writer.Flush()
 }
 
 func (s *store) IsExist(key string) bool {
-	_, err := s.Get(key)
+	_, err := s.First(key)
 	return err == nil
 }
 

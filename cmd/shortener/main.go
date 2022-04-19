@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/aes"
+	"encoding/hex"
 	"flag"
 	"log"
 
@@ -38,26 +39,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//secureCookies keys
-	hashKey, err := store.Get("secureCookieHashKey")
-	if err != nil {
-		hashKey = string(securecookie.GenerateRandomKey(aes.BlockSize * 2))
-		store.Set("secureCookieHashKey", hashKey)
-	}
-	blockKey, err := store.Get("secureCookieBlockKey")
-	if err != nil {
-		blockKey = string(securecookie.GenerateRandomKey(aes.BlockSize * 2))
-		store.Set("secureCookieBlockKey", blockKey)
-	}
-
-	sCookie := securecookie.New([]byte(hashKey), []byte(blockKey))
-
 	//Create app instance
 	app := app.New(
 		app.WithStorage(store),
 		app.WithBaseURL(cfg.BaseURL),
 		app.WithAddr(cfg.Addr),
-		app.WithSecureCookie(sCookie),
+		app.WithSecureCookie(initSecureCookie()),
 	)
 
 	//Run app
@@ -76,4 +63,36 @@ func processFlags() {
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
 	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
 	flag.Parse()
+}
+
+func initSecureCookie() *securecookie.SecureCookie {
+	store, err := infile.New("secure_cookie.txt")
+	if err != nil {
+		panic(err)
+	}
+
+	var hashKey, blockKey []byte
+
+	result, err := store.First("cookieHashKey")
+	if err != nil {
+		hashKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
+		store.Insert("cookieHashKey", hex.EncodeToString(hashKey))
+	} else {
+		hashKey, err = hex.DecodeString(result.Value)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	result, err = store.First("cookieBlockKey")
+	if err != nil {
+		blockKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
+		store.Insert("cookieBlockKey", hex.EncodeToString(blockKey))
+	} else {
+		blockKey, err = hex.DecodeString(result.Value)
+		if err != nil {
+			panic(err)
+		}
+	}
+	return securecookie.New(hashKey, blockKey)
 }
