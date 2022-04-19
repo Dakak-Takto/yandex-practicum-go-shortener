@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/aes"
-	"encoding/hex"
 	"flag"
 	"log"
 
@@ -66,33 +65,33 @@ func processFlags() {
 }
 
 func initSecureCookie() *securecookie.SecureCookie {
-	store, err := infile.New("secure_cookie.txt")
-	if err != nil {
-		panic(err)
-	}
+	// store, err := infile.New("secure_cookie.txt")
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	var hashKey, blockKey []byte
 
-	result, err := store.First("cookieHashKey")
-	if err != nil {
-		hashKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
-		store.Insert("cookieHashKey", hex.EncodeToString(hashKey))
-	} else {
-		hashKey, err = hex.DecodeString(result.Value)
-		if err != nil {
-			panic(err)
-		}
-	}
+	// result, err := store.First("cookieHashKey")
+	// if err != nil {
+	hashKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
+	// 	store.Insert("cookieHashKey", hex.EncodeToString(hashKey))
+	// } else {
+	// hashKey, err = hex.DecodeString(result.Value)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 
-	result, err = store.First("cookieBlockKey")
-	if err != nil {
-		blockKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
-		store.Insert("cookieBlockKey", hex.EncodeToString(blockKey))
-	} else {
-		blockKey, err = hex.DecodeString(result.Value)
-		if err != nil {
-			panic(err)
-		}
-	}
+	// result, err = store.First("cookieBlockKey")
+	// if err != nil {
+	blockKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
+	// 	store.Insert("cookieBlockKey", hex.EncodeToString(blockKey))
+	// } else {
+	// 	blockKey, err = hex.DecodeString(result.Value)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// }
 	return securecookie.New(hashKey, blockKey)
 }
