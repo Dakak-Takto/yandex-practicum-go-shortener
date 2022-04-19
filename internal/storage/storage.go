@@ -6,5 +6,4 @@ type Storage interface {
 	IsExist(key string) bool
 	Lock()
 	Unlock()
-	// Destroy() error
 }

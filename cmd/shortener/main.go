@@ -1,10 +1,12 @@
 package main
 
 import (
+	"crypto/aes"
 	"flag"
 	"log"
 
 	"github.com/caarlos0/env/v6"
+	"github.com/gorilla/securecookie"
 
 	"yandex-practicum-go-shortener/internal/app"
 	"yandex-practicum-go-shortener/internal/storage"
@@ -36,11 +38,26 @@ func main() {
 		log.Fatal(err)
 	}
 
+	//secureCookies keys
+	hashKey, err := store.Get("secureCookieHashKey")
+	if err != nil {
+		hashKey = string(securecookie.GenerateRandomKey(aes.BlockSize * 2))
+		store.Set("secureCookieHashKey", hashKey)
+	}
+	blockKey, err := store.Get("secureCookieBlockKey")
+	if err != nil {
+		blockKey = string(securecookie.GenerateRandomKey(aes.BlockSize * 2))
+		store.Set("secureCookieBlockKey", blockKey)
+	}
+
+	sCookie := securecookie.New([]byte(hashKey), []byte(blockKey))
+
 	//Create app instance
 	app := app.New(
 		app.WithStorage(store),
 		app.WithBaseURL(cfg.BaseURL),
 		app.WithAddr(cfg.Addr),
+		app.WithSecureCookie(sCookie),
 	)
 
 	//Run app

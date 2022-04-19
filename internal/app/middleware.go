@@ -2,8 +2,13 @@ package app
 
 import (
 	"compress/gzip"
+	"context"
+	"encoding/binary"
+	"fmt"
+	"log"
 	"net/http"
 	"strings"
+	"yandex-practicum-go-shortener/internal/random"
 )
 
 func (app *application) decompress(next http.Handler) http.Handler {
@@ -29,5 +34,46 @@ func (app *application) decompress(next http.Handler) http.Handler {
 		r.Body = gzReader
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) SetCookie(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		if cookie, err := r.Cookie("token"); err == nil {
+			log.Printf("token: %x", cookie)
+			value := make(map[string]string)
+			if err := app.secureCookie.Decode("token", cookie.Value, &value); err == nil {
+				ctx := context.WithValue(context.Background(), "uid", value["uid"])
+				next.ServeHTTP(w, r.WithContext(ctx))
+				return
+			}
+		}
+
+		uidBytes, err := random.RandomBytes(8)
+		if err != nil {
+			http.Error(w, "something went wrong", http.StatusInternalServerError)
+			return
+		}
+		uid := binary.BigEndian.Uint64(uidBytes)
+
+		value := map[string]string{
+			"uid": fmt.Sprintf("%d", uid),
+		}
+
+		if encoded, err := app.secureCookie.Encode("token", value); err == nil {
+			cookie := &http.Cookie{
+				Name:     "token",
+				Value:    encoded,
+				Path:     "/",
+				Secure:   true,
+				HttpOnly: true,
+			}
+			log.Printf("set cookie: %v", cookie)
+			http.SetCookie(w, cookie)
+			ctx := context.WithValue(context.Background(), string("uid"), value["uid"])
+			next.ServeHTTP(w, r.WithContext(ctx))
+			return
+		}
 	})
 }

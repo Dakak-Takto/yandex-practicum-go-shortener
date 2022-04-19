@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/securecookie"
 
 	"yandex-practicum-go-shortener/internal/storage"
 )
@@ -16,9 +17,10 @@ type Application interface {
 }
 
 type application struct {
-	store   storage.Storage
-	baseURL string
-	addr    string
+	store        storage.Storage
+	baseURL      string
+	addr         string
+	secureCookie *securecookie.SecureCookie
 }
 
 func New(opts ...Option) Application {
@@ -37,6 +39,7 @@ func (app *application) Run() error {
 	router.Use(middleware.Logger)
 	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
 	router.Use(app.decompress)
+	router.Use(app.SetCookie)
 
 	//Routes
 	router.Get("/{key}", app.GetHandler)
@@ -76,5 +79,11 @@ func WithBaseURL(baseURL string) Option {
 func WithAddr(addr string) Option {
 	return func(app *application) {
 		app.addr = addr
+	}
+}
+
+func WithSecureCookie(s *securecookie.SecureCookie) Option {
+	return func(app *application) {
+		app.secureCookie = s
 	}
 }
