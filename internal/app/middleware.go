@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/hex"
+	"log"
 	"net/http"
 	"strings"
 	"yandex-practicum-go-shortener/internal/random"
@@ -47,11 +48,14 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 		if cookie, err := r.Cookie("token"); err == nil {
 			value := make(map[string]string)
 			if err := app.secureCookie.Decode("token", cookie.Value, &value); err == nil {
-
 				ctx := context.WithValue(r.Context(), uidContext("uid"), uidContext(value["uid"]))
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
+			} else {
+				log.Println(err)
 			}
+		} else {
+			log.Println(err)
 		}
 
 		uidBytes, err := random.RandomBytes(8)
@@ -73,6 +77,7 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 				Secure:   true,
 				HttpOnly: true,
 			}
+			log.Printf("Set new token: %s", uid)
 			http.SetCookie(w, cookie)
 
 			ctx := context.WithValue(r.Context(), uidContext("uid"), uidContext(uid))

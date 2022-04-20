@@ -37,6 +37,8 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Printf("getUserURLs handler. uid: %s", uid)
+
 	urls := app.store.Get(string(uid))
 
 	if urls == nil {
@@ -45,7 +47,7 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type item struct {
-		Short    string `json:"short_rl"`
+		Short    string `json:"short_url"`
 		Original string `json:"original_url"`
 	}
 
@@ -102,7 +104,9 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 	key := app.generateKey(keyLenghtStart)
 
 	app.store.Insert(key, parsedURL.String())
+	log.Printf("save short %s -> %s", key, parsedURL.String())
 	app.store.Insert(string(uid), key)
+	log.Printf("save %s, %s", uid, key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
