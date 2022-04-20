@@ -36,6 +36,8 @@ func (app *application) Run() error {
 	router := chi.NewRouter()
 
 	//Middlewares
+	router.Use(app.debug)
+
 	router.Use(middleware.Logger)
 	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
 	router.Use(app.decompress)

@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/hex"
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -84,5 +85,13 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
+	})
+}
+
+func (app *application) debug(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Printf("--> Request Cookie: %v\n", r.Cookies())
+		next.ServeHTTP(w, r)
+		fmt.Printf("<-- Response headers:%v\n", w.Header())
 	})
 }
