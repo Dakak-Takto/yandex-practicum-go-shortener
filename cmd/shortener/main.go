@@ -19,6 +19,7 @@ var cfg struct {
 	Addr            string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
 	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
+	DatabaseDSN     string `env:"DATABASE_DSN" envDefault:"-"`
 }
 
 func main() {
@@ -27,24 +28,19 @@ func main() {
 	processFlags()
 
 	//Create storage instance
-	var store storage.Storage
-	var err error
-
-	if cfg.FileStoragePath != "" {
-		store, err = infile.New(cfg.FileStoragePath)
-	} else {
-		store, err = inmem.New()
-	}
+	store, err := getStorageInstance()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
+
+	var secureCookie = getSecureCookieInstance()
 
 	//Create app instance
 	app := app.New(
 		app.WithStorage(store),
 		app.WithBaseURL(cfg.BaseURL),
 		app.WithAddr(cfg.Addr),
-		app.WithSecureCookie(initSecureCookie()),
+		app.WithSecureCookie(secureCookie),
 	)
 
 	//Run app
@@ -62,10 +58,27 @@ func processFlags() {
 	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
 	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
+	flag.StringVar(&cfg.DatabaseDSN, "d", "", "dsn string for connection ")
 	flag.Parse()
 }
 
-func initSecureCookie() *securecookie.SecureCookie {
+func getStorageInstance() (storage.Storage, error) {
+
+	if cfg.DatabaseDSN != "" {
+		log.Println("use database. dsn:", cfg.DatabaseDSN)
+		// return storage.Storage{}
+	}
+
+	if cfg.FileStoragePath != "" {
+		log.Println("use file storage. file storage path:", cfg.FileStoragePath)
+		return infile.New(cfg.FileStoragePath)
+	}
+
+	log.Println("use memory storage")
+	return inmem.New()
+}
+
+func getSecureCookieInstance() *securecookie.SecureCookie {
 	store, err := infile.New("secure_cookie.txt")
 	if err != nil {
 		panic(err)
