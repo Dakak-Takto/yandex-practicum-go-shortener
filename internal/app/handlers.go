@@ -117,6 +117,14 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 //accept text/plain body with url, make short url, write in storage, return short url in body
 func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request) {
 
+	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+
+	if !ok {
+		render.Status(r, http.StatusUnauthorized)
+		render.JSON(w, r, render.M{"error": "not authorized"})
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -136,6 +144,7 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 
 	app.store.Insert(key, parsedURL.String())
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
+	app.store.Insert(string(uid), key)
 
 	render.Status(r, http.StatusCreated)
 	render.PlainText(w, r, result)

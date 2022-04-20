@@ -75,7 +75,6 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 				Name:     "token",
 				Value:    encoded,
 				Path:     "/",
-				Secure:   true,
 				HttpOnly: true,
 			}
 			log.Printf("Set new token: %s", uid)
