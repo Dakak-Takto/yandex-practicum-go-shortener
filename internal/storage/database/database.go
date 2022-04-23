@@ -22,10 +22,13 @@ func New(dsn string) (storage.Storage, error) {
 		return nil, err
 	}
 
-	_, err = db.Query(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255) PRIMARY KEY, original VARCHAR(255) NOT NULL, user_id VARCHAR(255) )`)
+	row, err := db.Query(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255) PRIMARY KEY, original VARCHAR(255) NOT NULL, user_id VARCHAR(255) )`)
 
 	if err != nil {
 		return nil, err
+	}
+	if err = row.Err(); err != nil {
+		log.Print(err)
 	}
 
 	return &database{
@@ -62,6 +65,10 @@ func (d *database) Get(key string) []storage.URLRecord {
 			Short:    key,
 		})
 	}
+	if err = rows.Err(); err != nil {
+		log.Print(err)
+	}
+
 	return []storage.URLRecord{}
 }
 
@@ -77,7 +84,6 @@ func (d *database) GetByUID(uid string) []storage.URLRecord {
 
 	for rows.Next() {
 		err = rows.Scan(&original, &userID)
-		log.Println(original, userID)
 		result = append(result, storage.URLRecord{
 			Original: original,
 			UserID:   userID,
