@@ -27,11 +27,11 @@ func TestInFile(t *testing.T) {
 	t.Run("Read storage test", func(t *testing.T) {
 		s.Lock()
 		defer s.Unlock()
-		s.Insert("test-key", "test-value")
+		s.Save("test-key", "test-value", "0")
 		v, err := s.First("test-key")
 
 		require.NoError(t, err)
-		require.Equal(t, "test-value", v.Value)
+		require.Equal(t, "test-value", v.Original)
 	})
 
 	if err := s.file.Close(); err != nil {

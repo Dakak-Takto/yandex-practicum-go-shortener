@@ -1,14 +1,14 @@
 package storage
 
 type Storage interface {
-	First(key string) (Entity, error)
-	Get(key string) []Entity
-	Insert(key, value string)
+	First(key string) (URLRecord, error)
+	Get(key string) []URLRecord
+	Save(short, original, userID string)
 	IsExist(key string) bool
 	Lock()
 	Unlock()
 }
 
-type Entity struct {
-	Key, Value string
+type URLRecord struct {
+	Short, Original, UserID string
 }

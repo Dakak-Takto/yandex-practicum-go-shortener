@@ -8,7 +8,7 @@ import (
 
 type store struct {
 	dataMutex sync.Mutex
-	data      []storage.Entity
+	data      []storage.URLRecord
 }
 
 var _ storage.Storage = (*store)(nil)
@@ -18,29 +18,29 @@ func New() (storage.Storage, error) {
 	return &store{}, nil
 }
 
-func (s *store) First(key string) (storage.Entity, error) {
+func (s *store) First(key string) (storage.URLRecord, error) {
 	for _, entity := range s.data {
-		if entity.Key == key {
+		if entity.Short == key {
 			return entity, nil
 		}
 	}
-	return storage.Entity{}, errors.New("notFoundError")
+	return storage.URLRecord{}, errors.New("notFoundError")
 }
 
-func (s *store) Get(key string) []storage.Entity {
-	var result []storage.Entity
+func (s *store) Get(key string) []storage.URLRecord {
+	var result []storage.URLRecord
 	for _, entity := range s.data {
-		if entity.Key == key {
+		if entity.Short == key {
 			result = append(result, entity)
 		}
 	}
 	return result
 }
 
-func (s *store) Insert(key, value string) {
-	s.data = append(s.data, storage.Entity{
-		Key:   key,
-		Value: value,
+func (s *store) Save(short, original, userID string) {
+	s.data = append(s.data, storage.URLRecord{
+		Short:    short,
+		Original: original,
 	})
 }
 

@@ -17,10 +17,10 @@ func TestInmem(t *testing.T) {
 		s, err := New()
 		require.NoError(t, err)
 
-		s.Insert("test-key", "test-value")
+		s.Save("test-key", "test-value", "0")
 		v, err := s.First("test-key")
 
 		require.NoError(t, err)
-		require.Equal(t, "test-value", v.Value)
+		require.Equal(t, "test-value", v.Original)
 	})
 }

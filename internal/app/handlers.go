@@ -24,7 +24,7 @@ func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	http.Redirect(w, r, url.Value, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, url.Original, http.StatusTemporaryRedirect)
 }
 
 func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
@@ -53,13 +53,13 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	var result []item
 	for _, u := range urls {
-		u, err := app.store.First(u.Value)
+		u, err := app.store.First(u.Original)
 		if err != nil {
 			continue
 		}
 		result = append(result, item{
-			Short:    fmt.Sprintf("%s/%s", app.baseURL, u.Key),
-			Original: u.Value,
+			Short:    fmt.Sprintf("%s/%s", app.baseURL, u.Short),
+			Original: u.Original,
 		})
 	}
 	render.JSON(w, r, result)
@@ -103,10 +103,8 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	key := app.generateKey(keyLenghtStart)
 
-	app.store.Insert(key, parsedURL.String())
+	app.store.Save(key, parsedURL.String(), uid.String())
 	log.Printf("save short %s -> %s", key, parsedURL.String())
-	app.store.Insert(string(uid), key)
-	log.Printf("save %s, %s", uid, key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
@@ -142,9 +140,8 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 
 	key := app.generateKey(keyLenghtStart)
 
-	app.store.Insert(key, parsedURL.String())
+	app.store.Save(key, parsedURL.String(), uid.String())
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
-	app.store.Insert(string(uid), key)
 
 	render.Status(r, http.StatusCreated)
 	render.PlainText(w, r, result)

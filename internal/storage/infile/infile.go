@@ -34,7 +34,7 @@ func New(filepath string) (storage.Storage, error) {
 	}, nil
 }
 
-func (s *store) First(key string) (storage.Entity, error) {
+func (s *store) First(key string) (storage.URLRecord, error) {
 
 	s.file.Seek(0, io.SeekStart)
 	for {
@@ -44,17 +44,17 @@ func (s *store) First(key string) (storage.Entity, error) {
 		}
 		record := strings.Split(string(b), ",")
 		if key == record[0] {
-			return storage.Entity{
-				Key:   record[0],
-				Value: record[1],
+			return storage.URLRecord{
+				Short:    record[0],
+				Original: record[1],
 			}, nil
 		}
 	}
-	return storage.Entity{}, errors.New("errNotFound")
+	return storage.URLRecord{}, errors.New("errNotFound")
 }
 
-func (s *store) Get(key string) []storage.Entity {
-	var result []storage.Entity
+func (s *store) Get(key string) []storage.URLRecord {
+	var result []storage.URLRecord
 
 	s.file.Seek(0, io.SeekStart)
 	for {
@@ -64,18 +64,18 @@ func (s *store) Get(key string) []storage.Entity {
 		}
 		record := strings.Split(string(b), ",")
 		if record[0] == key {
-			result = append(result, storage.Entity{
-				Key:   key,
-				Value: record[1],
+			result = append(result, storage.URLRecord{
+				Short:    key,
+				Original: record[1],
 			})
 		}
 	}
 	return result
 }
 
-func (s *store) Insert(key, value string) {
+func (s *store) Save(short, original, userID string) {
 	s.file.Seek(0, io.SeekEnd)
-	record := []string{key, value}
+	record := []string{short, original}
 
 	_, err := s.writer.WriteString(strings.Join(record, ",") + "\n")
 	if err != nil {
