@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/aes"
-	"encoding/hex"
 	"flag"
 	"log"
 
@@ -11,6 +10,7 @@ import (
 
 	"yandex-practicum-go-shortener/internal/app"
 	"yandex-practicum-go-shortener/internal/storage"
+	"yandex-practicum-go-shortener/internal/storage/database"
 	"yandex-practicum-go-shortener/internal/storage/infile"
 	"yandex-practicum-go-shortener/internal/storage/inmem"
 )
@@ -66,7 +66,7 @@ func getStorageInstance() (storage.Storage, error) {
 
 	if cfg.DatabaseDSN != "" {
 		log.Println("use database. dsn:", cfg.DatabaseDSN)
-		// return storage.Storage{}
+		return database.New(cfg.DatabaseDSN)
 	}
 
 	if cfg.FileStoragePath != "" {
@@ -79,33 +79,7 @@ func getStorageInstance() (storage.Storage, error) {
 }
 
 func getSecureCookieInstance() *securecookie.SecureCookie {
-	store, err := infile.New("secure_cookie.txt")
-	if err != nil {
-		panic(err)
-	}
-
-	var hashKey, blockKey []byte
-
-	result, err := store.First("cookieHashKey")
-	if err != nil {
-		hashKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
-		store.Insert("cookieHashKey", hex.EncodeToString(hashKey))
-	} else {
-		hashKey, err = hex.DecodeString(result.Value)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	result, err = store.First("cookieBlockKey")
-	if err != nil {
-		blockKey = securecookie.GenerateRandomKey(aes.BlockSize * 2)
-		store.Insert("cookieBlockKey", hex.EncodeToString(blockKey))
-	} else {
-		blockKey, err = hex.DecodeString(result.Value)
-		if err != nil {
-			panic(err)
-		}
-	}
+	hashKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
+	blockKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
 	return securecookie.New(hashKey, blockKey)
 }
