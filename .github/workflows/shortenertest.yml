@@ -118,7 +118,7 @@ jobs:
               -binary-path=cmd/shortener/shortener
 
       - name: "Code increment #10"
-        if: ${{ false }}
+        if: always()
         run: |
           shortenertest -test.v -test.run=^TestIteration10$ \
               -source-path=. \
