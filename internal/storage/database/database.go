@@ -22,14 +22,13 @@ func New(dsn string) (storage.Storage, error) {
 		return nil, err
 	}
 
-	row, err := db.Query(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255) PRIMARY KEY, original VARCHAR(255) NOT NULL, user_id VARCHAR(255) )`)
+	result, err := db.Exec(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255) PRIMARY KEY, original VARCHAR(255) NOT NULL, user_id VARCHAR(255) )`)
 
 	if err != nil {
 		return nil, err
 	}
-	if err = row.Err(); err != nil {
-		log.Print(err)
-	}
+
+	log.Println(result)
 
 	return &database{
 		db: db,
@@ -100,10 +99,11 @@ func (d *database) GetByUID(uid string) []storage.URLRecord {
 	return result
 }
 func (d *database) Save(short, original, userID string) {
-	_, err := d.db.Query("INSERT INTO shorts (short, original, user_id) VALUES ($1, $2, $3)", short, original, userID)
+	result, err := d.db.Exec("INSERT INTO shorts (short, original, user_id) VALUES ($1, $2, $3)", short, original, userID)
 	if err != nil {
 		log.Println(err)
 	}
+	log.Println(result)
 }
 func (d *database) IsExist(key string) bool {
 	return false
