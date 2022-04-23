@@ -73,6 +73,27 @@ func (s *store) Get(key string) []storage.URLRecord {
 	return result
 }
 
+func (s *store) GetByUID(uid string) []storage.URLRecord {
+	var result []storage.URLRecord
+
+	s.file.Seek(0, io.SeekStart)
+	for {
+		b, _, err := s.reader.ReadLine()
+		if err != nil {
+			break
+		}
+		record := strings.Split(string(b), ",")
+		if record[2] == uid {
+			result = append(result, storage.URLRecord{
+				Short:    record[0],
+				Original: record[1],
+				UserID:   record[2],
+			})
+		}
+	}
+	return result
+}
+
 func (s *store) Save(short, original, userID string) {
 	s.file.Seek(0, io.SeekEnd)
 	record := []string{short, original}
@@ -94,4 +115,8 @@ func (s *store) Lock() {
 }
 func (s *store) Unlock() {
 	s.fileMutex.Unlock()
+}
+
+func (s *store) Ping() error {
+	return nil
 }

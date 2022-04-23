@@ -64,12 +64,40 @@ func (d *database) Get(key string) []storage.URLRecord {
 	}
 	return []storage.URLRecord{}
 }
+
+func (d *database) GetByUID(uid string) []storage.URLRecord {
+	rows, err := d.db.Query("SELECT original, user_id FROM shorts WHERE user_id = $1", uid)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	defer rows.Close()
+	var result []storage.URLRecord
+	var original, userID string
+
+	for rows.Next() {
+		err = rows.Scan(&original, &userID)
+		log.Println(original, userID)
+		result = append(result, storage.URLRecord{
+			Original: original,
+			UserID:   userID,
+			Short:    uid,
+		})
+		if err != nil {
+			log.Println(err)
+		}
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Print(err)
+	}
+	return result
+}
 func (d *database) Save(short, original, userID string) {
-	sqlStr, err := d.db.Query("INSERT INTO shorts (short, original, user_id) VALUES ($1, $2, $3)", short, original, userID)
+	_, err := d.db.Query("INSERT INTO shorts (short, original, user_id) VALUES ($1, $2, $3)", short, original, userID)
 	if err != nil {
 		log.Println(err)
 	}
-	_ = sqlStr
 }
 func (d *database) IsExist(key string) bool {
 	return false
@@ -79,4 +107,8 @@ func (d *database) Lock() {
 }
 func (d *database) Unlock() {
 
+}
+
+func (d *database) Ping() error {
+	return d.db.Ping()
 }

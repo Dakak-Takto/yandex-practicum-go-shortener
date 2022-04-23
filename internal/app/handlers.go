@@ -39,30 +39,14 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("getUserURLs handler. uid: %s", uid)
 
-	urls := app.store.Get(string(uid))
+	urls := app.store.GetByUID(uid.String())
 
 	if urls == nil {
 		render.NoContent(w, r)
 		return
 	}
 
-	type item struct {
-		Short    string `json:"short_url"`
-		Original string `json:"original_url"`
-	}
-
-	var result []item
-	for _, u := range urls {
-		u, err := app.store.First(u.Original)
-		if err != nil {
-			continue
-		}
-		result = append(result, item{
-			Short:    fmt.Sprintf("%s/%s", app.baseURL, u.Short),
-			Original: u.Original,
-		})
-	}
-	render.JSON(w, r, result)
+	render.JSON(w, r, urls)
 }
 
 //accept json, make short url, write in storage, return short url
@@ -145,4 +129,12 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 
 	render.Status(r, http.StatusCreated)
 	render.PlainText(w, r, result)
+}
+
+func (app *application) pingDatabase(w http.ResponseWriter, r *http.Request) {
+	if err := app.store.Ping(); err != nil {
+		render.Status(r, http.StatusInternalServerError)
+	} else {
+		render.Status(r, http.StatusOK)
+	}
 }

@@ -45,6 +45,7 @@ func (app *application) Run() error {
 
 	//Routes
 	router.Get("/{key}", app.GetHandler)
+	router.Get("/ping", app.pingDatabase)
 	router.Post("/", app.LegacyPostHandler)
 	router.Post("/api/shorten", app.PostHandler)
 	router.Get("/api/user/urls", app.getUserURLs)

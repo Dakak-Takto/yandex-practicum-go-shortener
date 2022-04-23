@@ -36,11 +36,21 @@ func (s *store) Get(key string) []storage.URLRecord {
 	}
 	return result
 }
+func (s *store) GetByUID(uid string) []storage.URLRecord {
+	var result []storage.URLRecord
+	for _, entity := range s.data {
+		if entity.UserID == uid {
+			result = append(result, entity)
+		}
+	}
+	return result
+}
 
 func (s *store) Save(short, original, userID string) {
 	s.data = append(s.data, storage.URLRecord{
 		Short:    short,
 		Original: original,
+		UserID:   userID,
 	})
 }
 
@@ -55,4 +65,8 @@ func (s *store) Lock() {
 
 func (s *store) Unlock() {
 	s.dataMutex.Unlock()
+}
+
+func (s *store) Ping() error {
+	return nil
 }
