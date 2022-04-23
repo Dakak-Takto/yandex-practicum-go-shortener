@@ -41,8 +41,8 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
 	urls := app.store.GetByUID(uid.String())
 
-	for _, u := range urls {
-		u.Short = fmt.Sprintf("%s/%s", app.baseURL, u.Short)
+	for i := 0; i < len(urls); i++ {
+		urls[i].Short = fmt.Sprintf("%s/%s", app.baseURL, urls[i].Short)
 	}
 
 	if urls == nil {
