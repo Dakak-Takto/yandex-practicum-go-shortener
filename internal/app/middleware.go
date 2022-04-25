@@ -9,9 +9,11 @@ import (
 	"yandex-practicum-go-shortener/internal/random"
 )
 
+type ctxValueTypeUid string
+
 var (
-	ctxValueNameUid = "uid"
-	cookieNameToken = "token"
+	ctxValueNameUid ctxValueTypeUid = "uid"
+	cookieNameToken                 = "token"
 )
 
 func (app *application) decompress(next http.Handler) http.Handler {
@@ -52,20 +54,20 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 		uid, err := func() (string, error) {
 			cookie, err := r.Cookie("token")
 			if err != nil {
-				app.logger.Printf("cookie: token not found.", err)
+				app.logger.Print("cookie: token not found.", err)
 				return "", err
 			}
 
 			decoded := make(map[string]string)
 			err = app.secureCookie.Decode("token", cookie.Value, &decoded)
 			if err != nil {
-				app.logger.Printf("cookie: token decode failed.", err)
+				app.logger.Print("cookie: token decode failed.", err)
 				return "", err
 			}
 
 			uid := decoded["uid"]
 
-			app.logger.Printf("cookie: uid:", uid)
+			app.logger.Print("cookie: uid:", uid)
 			return uid, nil
 		}()
 
@@ -102,7 +104,6 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 		*/
 		ctx := context.WithValue(r.Context(), ctxValueNameUid, uid)
 		next.ServeHTTP(w, r.WithContext(ctx))
-		return
 
 	})
 }
