@@ -68,7 +68,7 @@ func (d *database) Get(key string) []storage.URLRecord {
 		log.Print(err)
 	}
 
-	return []storage.URLRecord{}
+	return result
 }
 
 func (d *database) GetByUID(uid string) []storage.URLRecord {

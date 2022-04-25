@@ -73,7 +73,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	var batchRequestURLs []struct {
-		CorellationID string `json:"correlation_id"`
+		CorellationID string `json:"corellation_id"`
 		OriginalURL   string `json:"original_url"`
 	}
 
@@ -92,6 +92,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 	var batchResponseURLs []responseURLs
 
 	for _, batchItem := range batchRequestURLs {
+		log.Println(batchItem)
 		originalURL, err := url.ParseRequestURI(batchItem.OriginalURL)
 		if err != nil {
 			render.Status(r, http.StatusBadRequest)
@@ -106,8 +107,8 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 		shortURL := fmt.Sprintf("%s/%s", app.baseURL, key)
 
 		batchResponseURLs = append(batchResponseURLs, responseURLs{
-			ShortURL:      shortURL,
 			CorellationID: batchItem.CorellationID,
+			ShortURL:      shortURL,
 		})
 	}
 	render.Status(r, http.StatusCreated)
