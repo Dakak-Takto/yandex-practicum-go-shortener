@@ -1,19 +1,20 @@
 package database
 
 import (
-	"database/sql"
 	"log"
 	"yandex-practicum-go-shortener/internal/storage"
+
+	"github.com/jmoiron/sqlx"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type database struct {
-	db *sql.DB
+	db *sqlx.DB
 }
 
 func New(dsn string) (storage.Storage, error) {
-	db, err := sql.Open("pgx", dsn)
+	db, err := sqlx.Open("pgx", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -35,48 +36,14 @@ func New(dsn string) (storage.Storage, error) {
 	}, err
 }
 
-func (d *database) GetByShort(key string) (storage.URLRecord, error) {
-	var original, userID string
-
-	row := d.db.QueryRow("SELECT original, user_id FROM shorts WHERE short=$1", key)
-	err := row.Scan(&original, &userID)
-	if err != nil {
-		return storage.URLRecord{}, err
-	}
-
-	return storage.URLRecord{
-		Short:    key,
-		Original: original,
-		UserID:   userID,
-	}, nil
+func (d *database) GetByShort(key string) (row storage.URLRecord, err error) {
+	err = d.db.Get(&row, "SELECT short, original, user_id FROM shorts WHERE short=$1", key)
+	return row, err
 }
 
-func (d *database) GetByUID(uid string) []storage.URLRecord {
-	rows, err := d.db.Query("SELECT original, user_id FROM shorts WHERE user_id = $1", uid)
-	if err != nil {
-		log.Println(err)
-		return nil
-	}
-	defer rows.Close()
-	var result []storage.URLRecord
-	var original, userID string
-
-	for rows.Next() {
-		err = rows.Scan(&original, &userID)
-		result = append(result, storage.URLRecord{
-			Original: original,
-			UserID:   userID,
-			Short:    uid,
-		})
-		if err != nil {
-			log.Println(err)
-		}
-	}
-
-	if err = rows.Err(); err != nil {
-		log.Print(err)
-	}
-	return result
+func (d *database) GetByUID(uid string) (rows []storage.URLRecord, err error) {
+	err = d.db.Select(&rows, "SELECT short, original, user_id FROM shorts WHERE user_id = $1", uid)
+	return rows, err
 }
 func (d *database) Save(short, original, userID string) {
 	result, err := d.db.Exec("INSERT INTO shorts (short, original, user_id) VALUES ($1, $2, $3)", short, original, userID)

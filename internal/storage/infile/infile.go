@@ -53,7 +53,7 @@ func (s *store) GetByShort(key string) (storage.URLRecord, error) {
 	return storage.URLRecord{}, errors.New("errNotFound")
 }
 
-func (s *store) GetByUID(uid string) []storage.URLRecord {
+func (s *store) GetByUID(uid string) ([]storage.URLRecord, error) {
 	var result []storage.URLRecord
 
 	s.file.Seek(0, io.SeekStart)
@@ -71,7 +71,7 @@ func (s *store) GetByUID(uid string) []storage.URLRecord {
 			})
 		}
 	}
-	return result
+	return result, nil
 }
 
 func (s *store) Save(short, original, userID string) {

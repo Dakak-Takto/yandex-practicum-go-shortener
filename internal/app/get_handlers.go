@@ -2,7 +2,6 @@ package app
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -30,9 +29,11 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("getUserURLs handler. uid: %s", uid)
-
-	urls := app.store.GetByUID(uid.String())
+	urls, err := app.store.GetByUID(uid.String())
+	if err != nil {
+		http.Error(w, "not found", http.StatusNotFound)
+		return
+	}
 
 	for i := 0; i < len(urls); i++ {
 		urls[i].Short = fmt.Sprintf("%s/%s", app.baseURL, urls[i].Short)

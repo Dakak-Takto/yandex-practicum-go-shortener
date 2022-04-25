@@ -27,14 +27,14 @@ func (s *store) GetByShort(key string) (storage.URLRecord, error) {
 	return storage.URLRecord{}, errors.New("notFoundError")
 }
 
-func (s *store) GetByUID(uid string) []storage.URLRecord {
+func (s *store) GetByUID(uid string) ([]storage.URLRecord, error) {
 	var result []storage.URLRecord
 	for _, entity := range s.data {
 		if entity.UserID == uid {
 			result = append(result, entity)
 		}
 	}
-	return result
+	return result, nil
 }
 
 func (s *store) Save(short, original, userID string) {
