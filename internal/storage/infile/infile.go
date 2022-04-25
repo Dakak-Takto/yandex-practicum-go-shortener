@@ -5,7 +5,6 @@ import (
 	"bufio"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"strings"
 	"sync"
@@ -74,15 +73,35 @@ func (s *store) GetByUID(uid string) ([]storage.URLRecord, error) {
 	return result, nil
 }
 
-func (s *store) Save(short, original, userID string) {
+func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
+
+	s.file.Seek(0, io.SeekStart)
+	for {
+		b, _, err := s.reader.ReadLine()
+		if err != nil {
+			break
+		}
+		record := strings.Split(string(b), ",")
+		if record[2] == original {
+			return storage.URLRecord{
+				Short:    record[0],
+				Original: record[1],
+				UserID:   record[2],
+			}, nil
+		}
+	}
+	return storage.URLRecord{}, errors.New("notFound")
+}
+
+func (s *store) Save(short, original, userID string) error {
 	s.file.Seek(0, io.SeekEnd)
-	record := []string{short, original}
+	record := []string{short, original, userID}
 
 	_, err := s.writer.WriteString(strings.Join(record, ",") + "\n")
 	if err != nil {
-		log.Println(err)
+		return err
 	}
-	s.writer.Flush()
+	return s.writer.Flush()
 }
 
 func (s *store) IsExist(key string) bool {

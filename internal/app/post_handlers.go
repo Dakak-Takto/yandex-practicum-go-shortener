@@ -1,10 +1,12 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"yandex-practicum-go-shortener/internal/storage"
 
 	"github.com/go-chi/render"
 )
@@ -50,7 +52,19 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 	key := app.generateKey(keyLenghtStart)
 	app.logger.Print("generated new key:", key)
 
-	app.store.Save(key, parsedURL.String(), uid)
+	err = app.store.Save(key, parsedURL.String(), uid)
+	if err != nil {
+		if errors.Is(err, storage.ErrDuplicate) {
+			app.logger.Print("database unique violation error", err)
+
+			existUrl, _ := app.store.GetByOriginal(parsedURL.String())
+			render.Status(r, http.StatusConflict)
+			result := fmt.Sprintf("%s/%s", app.baseURL, existUrl.Short)
+			render.JSON(w, r, render.M{"result": result})
+			return
+		}
+		app.logger.Print(err)
+	}
 	app.logger.Printf("url saved: URL: '%s', key '%s'", uid, key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
@@ -149,7 +163,20 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 	key := app.generateKey(keyLenghtStart)
 	app.logger.Printf("generated key: %s", key)
 
-	app.store.Save(key, parsedURL.String(), uid)
+	err = app.store.Save(key, parsedURL.String(), uid)
+	if err != nil {
+		if errors.Is(err, storage.ErrDuplicate) {
+			app.logger.Print("database unique violation error", err)
+
+			existUrl, _ := app.store.GetByOriginal(parsedURL.String())
+			render.Status(r, http.StatusConflict)
+			result := fmt.Sprintf("%s/%s", app.baseURL, existUrl.Short)
+			render.PlainText(w, r, result)
+			return
+		}
+		app.logger.Print(err)
+	}
+
 	app.logger.Printf("URL saved: %s -> %s", parsedURL.String(), key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)

@@ -8,6 +8,8 @@ require (
 	github.com/go-chi/httplog v0.2.4
 	github.com/go-chi/render v1.0.1
 	github.com/gorilla/securecookie v1.1.1
+	github.com/jackc/pgconn v1.12.0
+	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/jackc/pgx/v4 v4.16.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/rs/zerolog v1.26.1
@@ -17,7 +19,6 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
-	github.com/jackc/pgconn v1.12.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.3.0 // indirect

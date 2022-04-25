@@ -1,8 +1,11 @@
 package storage
 
+import "errors"
+
 type Storage interface {
 	GetByShort(key string) (URLRecord, error)
-	Save(short, original, userID string)
+	GetByOriginal(original string) (URLRecord, error)
+	Save(short, original, userID string) error
 	IsExist(key string) bool
 	GetByUID(uid string) ([]URLRecord, error)
 	Lock()
@@ -15,3 +18,7 @@ type URLRecord struct {
 	Original string `json:"original_url" db:"original"`
 	UserID   string `json:"-" db:"user_id"`
 }
+
+var (
+	ErrDuplicate = errors.New("error duplicate")
+)
