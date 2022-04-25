@@ -34,7 +34,7 @@ func New(filepath string) (storage.Storage, error) {
 	}, nil
 }
 
-func (s *store) First(key string) (storage.URLRecord, error) {
+func (s *store) GetByShort(key string) (storage.URLRecord, error) {
 
 	s.file.Seek(0, io.SeekStart)
 	for {
@@ -51,26 +51,6 @@ func (s *store) First(key string) (storage.URLRecord, error) {
 		}
 	}
 	return storage.URLRecord{}, errors.New("errNotFound")
-}
-
-func (s *store) Get(key string) []storage.URLRecord {
-	var result []storage.URLRecord
-
-	s.file.Seek(0, io.SeekStart)
-	for {
-		b, _, err := s.reader.ReadLine()
-		if err != nil {
-			break
-		}
-		record := strings.Split(string(b), ",")
-		if record[0] == key {
-			result = append(result, storage.URLRecord{
-				Short:    key,
-				Original: record[1],
-			})
-		}
-	}
-	return result
 }
 
 func (s *store) GetByUID(uid string) []storage.URLRecord {
@@ -106,7 +86,7 @@ func (s *store) Save(short, original, userID string) {
 }
 
 func (s *store) IsExist(key string) bool {
-	_, err := s.First(key)
+	_, err := s.GetByShort(key)
 	return err == nil
 }
 

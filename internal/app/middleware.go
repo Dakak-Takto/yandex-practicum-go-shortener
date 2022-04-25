@@ -4,8 +4,6 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/hex"
-	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"yandex-practicum-go-shortener/internal/random"
@@ -21,18 +19,22 @@ func (app *application) decompress(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
+			app.logger.Print("not contains Content-Encoding: gzip header. Continue.")
 			next.ServeHTTP(w, r)
 			return
 		}
 
+		app.logger.Print("Content-Encoding: gzip header. Try decompress.")
 		gzReader, err := gzip.NewReader(r.Body)
 		if err != nil {
+			app.logger.Print("error read body:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = gzReader.Close()
 		if err != nil {
+			app.logger.Print("error close reader:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -53,10 +55,11 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 				next.ServeHTTP(w, r.WithContext(ctx))
 				return
 			} else {
-				log.Println(err)
+				app.logger.Printf("error decode token cookie: %s", err)
+
 			}
 		} else {
-			log.Println(err)
+			app.logger.Printf("error take token cookie: %s", err)
 		}
 
 		uidBytes, err := random.RandomBytes(8)
@@ -65,6 +68,8 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 			return
 		}
 		uid := hex.EncodeToString(uidBytes)
+
+		app.logger.Printf("New UID: %s", uid)
 
 		value := map[string]string{
 			"uid": uid,
@@ -77,20 +82,11 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 				Path:     "/",
 				HttpOnly: true,
 			}
-			log.Printf("Set new token: %s", uid)
 			http.SetCookie(w, cookie)
 
 			ctx := context.WithValue(r.Context(), uidContext("uid"), uidContext(uid))
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
-	})
-}
-
-func (app *application) debug(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("--> Request Cookie: %v\n", r.Cookies())
-		next.ServeHTTP(w, r)
-		fmt.Printf("<-- Response headers:%v\n", w.Header())
 	})
 }

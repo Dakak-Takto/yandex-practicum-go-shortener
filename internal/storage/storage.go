@@ -1,8 +1,7 @@
 package storage
 
 type Storage interface {
-	First(key string) (URLRecord, error)
-	Get(key string) []URLRecord
+	GetByShort(key string) (URLRecord, error)
 	Save(short, original, userID string)
 	IsExist(key string) bool
 	GetByUID(uid string) []URLRecord

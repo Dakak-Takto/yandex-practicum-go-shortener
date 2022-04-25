@@ -2,12 +2,13 @@ package app
 
 import (
 	"compress/gzip"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog"
 	"github.com/gorilla/securecookie"
+	"github.com/rs/zerolog"
 
 	"yandex-practicum-go-shortener/internal/storage"
 )
@@ -21,6 +22,7 @@ type application struct {
 	baseURL      string
 	addr         string
 	secureCookie *securecookie.SecureCookie
+	logger       zerolog.Logger
 }
 
 func New(opts ...Option) Application {
@@ -36,9 +38,9 @@ func (app *application) Run() error {
 	router := chi.NewRouter()
 
 	//Middlewares
-	router.Use(app.debug)
+	app.logger = httplog.NewLogger("httplog", httplog.Options{LogLevel: "debug", JSON: false})
+	router.Use(httplog.Handler(app.logger))
 
-	router.Use(middleware.Logger)
 	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
 	router.Use(app.decompress)
 	router.Use(app.SetCookie)
@@ -52,7 +54,7 @@ func (app *application) Run() error {
 	router.Post("/api/shorten/batch", app.batchPostHandler)
 
 	//Run
-	log.Printf("Run app on %s", app.addr)
+	app.logger.Printf("Run app on %s", app.addr)
 
 	//Http server
 	server := http.Server{}

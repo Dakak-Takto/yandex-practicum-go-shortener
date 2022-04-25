@@ -35,7 +35,7 @@ func New(dsn string) (storage.Storage, error) {
 	}, err
 }
 
-func (d *database) First(key string) (storage.URLRecord, error) {
+func (d *database) GetByShort(key string) (storage.URLRecord, error) {
 	var original, userID string
 
 	row := d.db.QueryRow("SELECT original, user_id FROM shorts WHERE short=$1", key)
@@ -49,26 +49,6 @@ func (d *database) First(key string) (storage.URLRecord, error) {
 		Original: original,
 		UserID:   userID,
 	}, nil
-}
-func (d *database) Get(key string) []storage.URLRecord {
-	rows, err := d.db.Query("SELECT original, user_id FROM shorts WHERE short=$1", key)
-	if err != nil {
-		return nil
-	}
-	var result []storage.URLRecord
-	var original, userID string
-	for err := rows.Scan(&original, &userID); err == nil; {
-		result = append(result, storage.URLRecord{
-			Original: original,
-			UserID:   userID,
-			Short:    key,
-		})
-	}
-	if err = rows.Err(); err != nil {
-		log.Print(err)
-	}
-
-	return result
 }
 
 func (d *database) GetByUID(uid string) []storage.URLRecord {

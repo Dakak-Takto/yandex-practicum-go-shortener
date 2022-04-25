@@ -1,10 +1,8 @@
 package app
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -19,6 +17,7 @@ const (
 func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+	app.logger.Print("UID:", uid)
 
 	if !ok {
 		render.Status(r, http.StatusUnauthorized)
@@ -26,17 +25,13 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	var request struct {
 		URL string `json:"url"`
 	}
 
-	err = json.Unmarshal(body, &request)
+	err := render.DecodeJSON(r.Body, &request)
 	if err != nil {
+		app.logger.Print("error unmarshal json:", err)
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, render.M{"error": "no valid json found"})
 		return
@@ -44,6 +39,7 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 	parsedURL, err := url.ParseRequestURI(request.URL)
 	if err != nil {
+		app.logger.Print("error parse url:", request.URL, err)
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, render.M{"error": "no valid url found"})
 	}
@@ -52,9 +48,10 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 	defer app.store.Unlock()
 
 	key := app.generateKey(keyLenghtStart)
+	app.logger.Print("generated new key:", key)
 
 	app.store.Save(key, parsedURL.String(), uid.String())
-	log.Printf("save short %s -> %s", key, parsedURL.String())
+	app.logger.Printf("url saved: URL: '%s', key '%s'", key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
@@ -65,44 +62,47 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+	app.logger.Print("UID:", uid)
 
 	if !ok {
+		app.logger.Print("UID not found in request")
 		render.Status(r, http.StatusUnauthorized)
 		render.JSON(w, r, render.M{"error": "not authorized"})
 		return
 	}
 
 	var batchRequestURLs []struct {
-		CorellationID string `json:"correlation_id"`
+		CorellationID string `json:"corellation_id"`
 		OriginalURL   string `json:"original_url"`
 	}
 
-	render.DecodeJSON(r.Body, &batchRequestURLs)
-
-	if batchRequestURLs == nil {
+	err := render.DecodeJSON(r.Body, &batchRequestURLs)
+	if err != nil {
+		app.logger.Print("error decode json:", err)
 		render.Status(r, http.StatusBadRequest)
 		render.JSON(w, r, render.M{"error": "bad request"})
-		return
 	}
 
 	type responseURLs struct {
-		CorellationID string `json:"correlation_id"`
+		CorellationID string `json:"corellation_id"`
 		ShortURL      string `json:"short_url"`
 	}
+
 	var batchResponseURLs []responseURLs
 
 	for _, batchItem := range batchRequestURLs {
-		log.Println(batchItem)
 		originalURL, err := url.ParseRequestURI(batchItem.OriginalURL)
 		if err != nil {
+			app.logger.Print("error parse url:", batchItem.OriginalURL, err)
 			render.Status(r, http.StatusBadRequest)
 			render.JSON(w, r, render.M{"error": "error parse url:" + batchItem.OriginalURL})
 			return
 		}
 		key := app.generateKey(keyLenghtStart)
+		app.logger.Print("generated key:", key)
 
-		log.Printf("save short %s -> %s", key, originalURL.String())
 		app.store.Save(key, originalURL.String(), uid.String())
+		app.logger.Printf("url saved: URL: '%s', key '%s'", originalURL.String(), key)
 
 		shortURL := fmt.Sprintf("%s/%s", app.baseURL, key)
 
@@ -120,7 +120,10 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 
 	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
 
+	app.logger.Printf("UID: %s", uid)
+
 	if !ok {
+		app.logger.Printf("UID not found in request")
 		render.Status(r, http.StatusUnauthorized)
 		render.JSON(w, r, render.M{"error": "not authorized"})
 		return
@@ -128,12 +131,14 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
+		app.logger.Printf("Error read body: %s", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	parsedURL, err := url.ParseRequestURI(string(body))
 	if err != nil {
+		app.logger.Printf("Error parse URL: %s; Err: %s", string(body), err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -142,8 +147,11 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 	defer app.store.Unlock()
 
 	key := app.generateKey(keyLenghtStart)
+	app.logger.Printf("generated key: %s", key)
 
 	app.store.Save(key, parsedURL.String(), uid.String())
+	app.logger.Printf("URL saved: %s -> %s", parsedURL.String(), key)
+
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
 	render.Status(r, http.StatusCreated)

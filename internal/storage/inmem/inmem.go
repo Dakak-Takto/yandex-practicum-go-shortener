@@ -18,7 +18,7 @@ func New() (storage.Storage, error) {
 	return &store{}, nil
 }
 
-func (s *store) First(key string) (storage.URLRecord, error) {
+func (s *store) GetByShort(key string) (storage.URLRecord, error) {
 	for _, entity := range s.data {
 		if entity.Short == key {
 			return entity, nil
@@ -27,15 +27,6 @@ func (s *store) First(key string) (storage.URLRecord, error) {
 	return storage.URLRecord{}, errors.New("notFoundError")
 }
 
-func (s *store) Get(key string) []storage.URLRecord {
-	var result []storage.URLRecord
-	for _, entity := range s.data {
-		if entity.Short == key {
-			result = append(result, entity)
-		}
-	}
-	return result
-}
 func (s *store) GetByUID(uid string) []storage.URLRecord {
 	var result []storage.URLRecord
 	for _, entity := range s.data {
@@ -55,7 +46,7 @@ func (s *store) Save(short, original, userID string) {
 }
 
 func (s *store) IsExist(key string) bool {
-	_, err := s.First(key)
+	_, err := s.GetByShort(key)
 	return err == nil
 }
 

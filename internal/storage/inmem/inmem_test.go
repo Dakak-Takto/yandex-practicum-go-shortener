@@ -18,7 +18,7 @@ func TestInmem(t *testing.T) {
 		require.NoError(t, err)
 
 		s.Save("test-key", "test-value", "0")
-		v, err := s.First("test-key")
+		v, err := s.GetByShort("test-key")
 
 		require.NoError(t, err)
 		require.Equal(t, "test-value", v.Original)

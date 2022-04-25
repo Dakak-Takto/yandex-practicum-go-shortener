@@ -28,7 +28,7 @@ func TestInFile(t *testing.T) {
 		s.Lock()
 		defer s.Unlock()
 		s.Save("test-key", "test-value", "0")
-		v, err := s.First("test-key")
+		v, err := s.GetByShort("test-key")
 
 		require.NoError(t, err)
 		require.Equal(t, "test-value", v.Original)
