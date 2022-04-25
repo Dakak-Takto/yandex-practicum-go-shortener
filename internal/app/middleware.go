@@ -9,10 +9,10 @@ import (
 	"yandex-practicum-go-shortener/internal/random"
 )
 
-type ctxValueTypeUid string
+type ctxValueTypeUID string
 
 var (
-	ctxValueNameUid ctxValueTypeUid = "uid"
+	ctxValueNameUID ctxValueTypeUID = "uid"
 	cookieNameToken                 = "token"
 )
 
@@ -102,7 +102,7 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 		/*
 			порядок навели, передаем дальще
 		*/
-		ctx := context.WithValue(r.Context(), ctxValueNameUid, uid)
+		ctx := context.WithValue(r.Context(), ctxValueNameUID, uid)
 		next.ServeHTTP(w, r.WithContext(ctx))
 
 	})

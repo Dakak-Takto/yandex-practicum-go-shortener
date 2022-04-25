@@ -21,7 +21,7 @@ func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
-	uid, ok := r.Context().Value(ctxValueNameUid).(string)
+	uid, ok := r.Context().Value(ctxValueNameUID).(string)
 
 	if !ok {
 		render.Status(r, http.StatusUnauthorized)
