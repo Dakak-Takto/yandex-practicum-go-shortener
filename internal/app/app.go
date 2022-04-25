@@ -49,6 +49,7 @@ func (app *application) Run() error {
 	router.Post("/", app.LegacyPostHandler)
 	router.Post("/api/shorten", app.PostHandler)
 	router.Get("/api/user/urls", app.getUserURLs)
+	router.Post("/api/shorten/batch", app.batchPostHandler)
 
 	//Run
 	log.Printf("Run app on %s", app.addr)
