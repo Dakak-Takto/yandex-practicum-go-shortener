@@ -51,7 +51,7 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 	app.logger.Print("generated new key:", key)
 
 	app.store.Save(key, parsedURL.String(), uid.String())
-	app.logger.Printf("url saved: URL: '%s', key '%s'", key)
+	app.logger.Printf("url saved: URL: '%s', key '%s'", uid.String(), key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
