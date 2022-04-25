@@ -36,10 +36,6 @@ func RandomBytes(n int) ([]byte, error) {
 	return b, nil
 }
 
-func randomDigit() rune {
-	return rune(randomInt(9))
-}
-
 func randomBool() bool {
 	return randomInt(100) > 50
 }

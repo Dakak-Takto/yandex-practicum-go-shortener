@@ -27,7 +27,8 @@ func TestInFile(t *testing.T) {
 	t.Run("Read storage test", func(t *testing.T) {
 		s.Lock()
 		defer s.Unlock()
-		s.Save("test-key", "test-value", "0")
+		err := s.Save("test-key", "test-value", "0")
+		require.NoError(t, err)
 		v, err := s.GetByShort("test-key")
 
 		require.NoError(t, err)

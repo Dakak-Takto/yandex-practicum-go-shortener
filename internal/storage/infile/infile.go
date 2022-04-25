@@ -35,7 +35,10 @@ func New(filepath string) (storage.Storage, error) {
 
 func (s *store) GetByShort(key string) (storage.URLRecord, error) {
 
-	s.file.Seek(0, io.SeekStart)
+	_, err := s.file.Seek(0, io.SeekStart)
+	if err != nil {
+		return storage.URLRecord{}, err
+	}
 	for {
 		b, _, err := s.reader.ReadLine()
 		if err != nil {
@@ -55,7 +58,10 @@ func (s *store) GetByShort(key string) (storage.URLRecord, error) {
 func (s *store) GetByUID(uid string) ([]storage.URLRecord, error) {
 	var result []storage.URLRecord
 
-	s.file.Seek(0, io.SeekStart)
+	_, err := s.file.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, err
+	}
 	for {
 		b, _, err := s.reader.ReadLine()
 		if err != nil {
@@ -75,7 +81,10 @@ func (s *store) GetByUID(uid string) ([]storage.URLRecord, error) {
 
 func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
 
-	s.file.Seek(0, io.SeekStart)
+	_, err := s.file.Seek(0, io.SeekStart)
+	if err != nil {
+		return storage.URLRecord{}, err
+	}
 	for {
 		b, _, err := s.reader.ReadLine()
 		if err != nil {
@@ -94,10 +103,14 @@ func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
 }
 
 func (s *store) Save(short, original, userID string) error {
-	s.file.Seek(0, io.SeekEnd)
+	_, err := s.file.Seek(0, io.SeekEnd)
+	if err != nil {
+		return err
+	}
+
 	record := []string{short, original, userID}
 
-	_, err := s.writer.WriteString(strings.Join(record, ",") + "\n")
+	_, err = s.writer.WriteString(strings.Join(record, ",") + "\n")
 	if err != nil {
 		return err
 	}

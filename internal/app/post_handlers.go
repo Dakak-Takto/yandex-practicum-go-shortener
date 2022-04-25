@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"yandex-practicum-go-shortener/internal/storage"
@@ -57,9 +58,9 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, storage.ErrDuplicate) {
 			app.logger.Print("database unique violation error", err)
 
-			existUrl, _ := app.store.GetByOriginal(parsedURL.String())
+			existURL, _ := app.store.GetByOriginal(parsedURL.String())
 			render.Status(r, http.StatusConflict)
-			result := fmt.Sprintf("%s/%s", app.baseURL, existUrl.Short)
+			result := fmt.Sprintf("%s/%s", app.baseURL, existURL.Short)
 			render.JSON(w, r, render.M{"result": result})
 			return
 		}
@@ -115,7 +116,10 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 		key := app.generateKey(keyLenghtStart)
 		app.logger.Print("generated key:", key)
 
-		app.store.Save(key, originalURL.String(), uid)
+		err = app.store.Save(key, originalURL.String(), uid)
+		if err != nil {
+			log.Println(err)
+		}
 		app.logger.Printf("url saved: URL: '%s', key '%s'", originalURL.String(), key)
 
 		shortURL := fmt.Sprintf("%s/%s", app.baseURL, key)
@@ -168,9 +172,9 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 		if errors.Is(err, storage.ErrDuplicate) {
 			app.logger.Print("database unique violation error", err)
 
-			existUrl, _ := app.store.GetByOriginal(parsedURL.String())
+			existURL, _ := app.store.GetByOriginal(parsedURL.String())
 			render.Status(r, http.StatusConflict)
-			result := fmt.Sprintf("%s/%s", app.baseURL, existUrl.Short)
+			result := fmt.Sprintf("%s/%s", app.baseURL, existURL.Short)
 			render.PlainText(w, r, result)
 			return
 		}
