@@ -21,7 +21,7 @@ func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 
-	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+	uid, ok := r.Context().Value(ctxValueNameUid).(string)
 
 	if !ok {
 		render.Status(r, http.StatusUnauthorized)
@@ -29,7 +29,7 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urls, err := app.store.GetByUID(uid.String())
+	urls, err := app.store.GetByUID(uid)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return

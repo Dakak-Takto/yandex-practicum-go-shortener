@@ -23,7 +23,7 @@ func New(dsn string) (storage.Storage, error) {
 		return nil, err
 	}
 
-	result, err := db.Exec(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255) PRIMARY KEY, original VARCHAR(255) NOT NULL, user_id VARCHAR(255) )`)
+	result, err := db.Exec(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255), original VARCHAR(255) UNIQUE, user_id VARCHAR(255) )`)
 
 	if err != nil {
 		return nil, err

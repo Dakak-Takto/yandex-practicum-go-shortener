@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/render v1.0.1
 	github.com/gorilla/securecookie v1.1.1
 	github.com/jackc/pgx/v4 v4.16.0
+	github.com/jmoiron/sqlx v1.3.5
 	github.com/rs/zerolog v1.26.1
 	github.com/stretchr/testify v1.7.1
 )
@@ -22,7 +23,6 @@ require (
 	github.com/jackc/pgproto3/v2 v2.3.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20200714003250-2b9c44734f2b // indirect
 	github.com/jackc/pgtype v1.11.0 // indirect
-	github.com/jmoiron/sqlx v1.3.5 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect

@@ -16,7 +16,7 @@ const (
 //accept json, make short url, write in storage, return short url
 func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
-	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+	uid, ok := r.Context().Value(ctxValueNameUid).(string)
 	app.logger.Print("UID:", uid)
 
 	if !ok {
@@ -50,8 +50,8 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 	key := app.generateKey(keyLenghtStart)
 	app.logger.Print("generated new key:", key)
 
-	app.store.Save(key, parsedURL.String(), uid.String())
-	app.logger.Printf("url saved: URL: '%s', key '%s'", uid.String(), key)
+	app.store.Save(key, parsedURL.String(), uid)
+	app.logger.Printf("url saved: URL: '%s', key '%s'", uid, key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
 
@@ -61,7 +61,7 @@ func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+	uid, ok := r.Context().Value(ctxValueNameUid).(string)
 	app.logger.Print("UID:", uid)
 
 	if !ok {
@@ -101,7 +101,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 		key := app.generateKey(keyLenghtStart)
 		app.logger.Print("generated key:", key)
 
-		app.store.Save(key, originalURL.String(), uid.String())
+		app.store.Save(key, originalURL.String(), uid)
 		app.logger.Printf("url saved: URL: '%s', key '%s'", originalURL.String(), key)
 
 		shortURL := fmt.Sprintf("%s/%s", app.baseURL, key)
@@ -118,7 +118,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 //accept text/plain body with url, make short url, write in storage, return short url in body
 func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request) {
 
-	uid, ok := r.Context().Value(uidContext("uid")).(uidContext)
+	uid, ok := r.Context().Value(ctxValueNameUid).(string)
 
 	app.logger.Printf("UID: %s", uid)
 
@@ -149,7 +149,7 @@ func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request
 	key := app.generateKey(keyLenghtStart)
 	app.logger.Printf("generated key: %s", key)
 
-	app.store.Save(key, parsedURL.String(), uid.String())
+	app.store.Save(key, parsedURL.String(), uid)
 	app.logger.Printf("URL saved: %s -> %s", parsedURL.String(), key)
 
 	result := fmt.Sprintf("%s/%s", app.baseURL, key)
