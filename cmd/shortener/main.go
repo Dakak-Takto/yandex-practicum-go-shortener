@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/aes"
+	"encoding/json"
 	"flag"
 	"log"
 
@@ -14,6 +15,8 @@ import (
 	"yandex-practicum-go-shortener/internal/storage/infile"
 	"yandex-practicum-go-shortener/internal/storage/inmem"
 )
+
+var _ json.Number //использование известной библиотеки кодирования JSON
 
 var cfg struct {
 	Addr            string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`

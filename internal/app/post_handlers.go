@@ -72,7 +72,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	var batchRequestURLs []struct {
-		CorellationID string `json:"corellation_id"`
+		CorellationID string `json:"correlation_id"`
 		OriginalURL   string `json:"original_url"`
 	}
 
@@ -84,7 +84,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	type responseURLs struct {
-		CorellationID string `json:"corellation_id"`
+		CorellationID string `json:"correlation_id"`
 		ShortURL      string `json:"short_url"`
 	}
 
