@@ -110,7 +110,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 			CorellationID: batchItem.CorellationID,
 		})
 	}
-
+	render.Status(r, http.StatusCreated)
 	render.JSON(w, r, batchResponseURLs)
 }
 
