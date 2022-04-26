@@ -36,7 +36,7 @@ func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
 	return storage.URLRecord{}, errors.New("notFoundError")
 }
 
-func (s *store) GetByUID(uid string) ([]storage.URLRecord, error) {
+func (s *store) SelectByUID(uid string) ([]storage.URLRecord, error) {
 	var result []storage.URLRecord
 	for _, entity := range s.data {
 		if entity.UserID == uid {

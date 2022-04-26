@@ -29,7 +29,7 @@ func (app *application) getUserURLs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	urls, err := app.store.GetByUID(uid)
+	urls, err := app.store.SelectByUID(uid)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return

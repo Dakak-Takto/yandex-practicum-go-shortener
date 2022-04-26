@@ -3,13 +3,13 @@ package database
 import (
 	"errors"
 	"log"
-	"yandex-practicum-go-shortener/internal/storage"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
+	"yandex-practicum-go-shortener/internal/storage"
 )
 
 type database struct {
@@ -44,7 +44,7 @@ func (d *database) GetByShort(key string) (row storage.URLRecord, err error) {
 	return row, err
 }
 
-func (d *database) GetByUID(uid string) (rows []storage.URLRecord, err error) {
+func (d *database) SelectByUID(uid string) (rows []storage.URLRecord, err error) {
 	err = d.db.Select(&rows, "SELECT short, original, user_id FROM shorts WHERE user_id = $1", uid)
 	return rows, err
 }

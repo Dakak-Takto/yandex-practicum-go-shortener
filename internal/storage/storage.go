@@ -6,8 +6,7 @@ type Storage interface {
 	GetByShort(key string) (URLRecord, error)
 	GetByOriginal(original string) (URLRecord, error)
 	Save(short, original, userID string) error
-	IsExist(key string) bool
-	GetByUID(uid string) ([]URLRecord, error)
+	SelectByUID(uid string) ([]URLRecord, error)
 	Lock()
 	Unlock()
 	Ping() error

@@ -7,9 +7,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"yandex-practicum-go-shortener/internal/storage"
 
 	"github.com/go-chi/render"
+
+	"yandex-practicum-go-shortener/internal/storage"
 )
 
 const (
