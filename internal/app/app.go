@@ -2,11 +2,13 @@ package app
 
 import (
 	"compress/gzip"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/httplog"
+	"github.com/gorilla/securecookie"
+	"github.com/rs/zerolog"
 
 	"yandex-practicum-go-shortener/internal/storage"
 )
@@ -16,9 +18,11 @@ type Application interface {
 }
 
 type application struct {
-	store   storage.Storage
-	baseURL string
-	addr    string
+	store        storage.Storage
+	baseURL      string
+	addr         string
+	secureCookie *securecookie.SecureCookie
+	logger       zerolog.Logger
 }
 
 func New(opts ...Option) Application {
@@ -34,17 +38,23 @@ func (app *application) Run() error {
 	router := chi.NewRouter()
 
 	//Middlewares
-	router.Use(middleware.Logger)
+	app.logger = httplog.NewLogger("httplog", httplog.Options{LogLevel: "debug", JSON: false})
+	router.Use(httplog.Handler(app.logger))
+
 	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
 	router.Use(app.decompress)
+	router.Use(app.SetCookie)
 
 	//Routes
 	router.Get("/{key}", app.GetHandler)
+	router.Get("/ping", app.pingDatabase)
 	router.Post("/", app.LegacyPostHandler)
 	router.Post("/api/shorten", app.PostHandler)
+	router.Get("/api/user/urls", app.getUserURLs)
+	router.Post("/api/shorten/batch", app.batchPostHandler)
 
 	//Run
-	log.Printf("Run app on %s", app.addr)
+	app.logger.Printf("Run app on %s", app.addr)
 
 	//Http server
 	server := http.Server{}
@@ -76,5 +86,11 @@ func WithBaseURL(baseURL string) Option {
 func WithAddr(addr string) Option {
 	return func(app *application) {
 		app.addr = addr
+	}
+}
+
+func WithSecureCookie(s *securecookie.SecureCookie) Option {
+	return func(app *application) {
+		app.secureCookie = s
 	}
 }

@@ -7,47 +7,67 @@ import (
 )
 
 type store struct {
-	urlsMutex sync.Mutex
-	urls      map[string]string
+	dataMutex sync.Mutex
+	data      []storage.URLRecord
 }
 
 var _ storage.Storage = (*store)(nil)
 
 func New() (storage.Storage, error) {
 
-	return &store{
-		urls: make(map[string]string),
-	}, nil
+	return &store{}, nil
 }
 
-func (s *store) Get(key string) (string, error) {
-	if value, ok := s.urls[key]; ok {
-		return value, nil
+func (s *store) GetByShort(key string) (storage.URLRecord, error) {
+	for _, entity := range s.data {
+		if entity.Short == key {
+			return entity, nil
+		}
 	}
-
-	return "", errors.New("not found")
+	return storage.URLRecord{}, errors.New("notFoundError")
 }
 
-func (s *store) Set(key, value string) error {
-	s.urls[key] = value
+func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
+	for _, entity := range s.data {
+		if entity.Original == original {
+			return entity, nil
+		}
+	}
+	return storage.URLRecord{}, errors.New("notFoundError")
+}
 
+func (s *store) SelectByUID(uid string) ([]storage.URLRecord, error) {
+	var result []storage.URLRecord
+	for _, entity := range s.data {
+		if entity.UserID == uid {
+			result = append(result, entity)
+		}
+	}
+	return result, nil
+}
+
+func (s *store) Save(short, original, userID string) error {
+	s.data = append(s.data, storage.URLRecord{
+		Short:    short,
+		Original: original,
+		UserID:   userID,
+	})
 	return nil
 }
 
-func (s *store) IsExist(key string) (isExists bool) {
-	_, isExists = s.urls[key]
-
-	return isExists
+func (s *store) IsExist(key string) bool {
+	_, err := s.GetByShort(key)
+	return err == nil
 }
 
 func (s *store) Lock() {
-	s.urlsMutex.Lock()
+	s.dataMutex.Lock()
 }
 
 func (s *store) Unlock() {
-	s.urlsMutex.Unlock()
+	s.dataMutex.Unlock()
 }
 
-func (s *store) Destroy() error {
-	return errors.New("not implemented")
+func (s *store) Ping() error {
+	return nil
 }

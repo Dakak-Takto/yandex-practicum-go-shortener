@@ -9,12 +9,12 @@ func (app *application) generateKey(startLenght int) string {
 	var n = startLenght
 
 	for {
-		key := random.String(n)
-		if app.store.IsExist(key) {
+		short := random.String(n)
+		if _, err := app.store.GetByShort(short); err == nil {
 			n = n + 1
 			continue
 		} else {
-			return key
+			return short
 		}
 	}
 

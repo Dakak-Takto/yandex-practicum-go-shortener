@@ -27,8 +27,13 @@ func String(lenght int) string {
 	return string(word)
 }
 
-func randomDigit() rune {
-	return rune(randomInt(9))
+func RandomBytes(n int) ([]byte, error) {
+	var b = make([]byte, n)
+	_, err := rand.Read(b)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 func randomBool() bool {

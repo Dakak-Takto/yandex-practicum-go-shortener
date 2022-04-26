@@ -3,6 +3,7 @@ package infile
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"os"
 	"strings"
@@ -32,23 +33,82 @@ func New(filepath string) (storage.Storage, error) {
 	}, nil
 }
 
-func (s *store) Get(key string) (value string, err error) {
-	s.file.Seek(0, io.SeekStart)
+func (s *store) GetByShort(key string) (storage.URLRecord, error) {
+
+	_, err := s.file.Seek(0, io.SeekStart)
+	if err != nil {
+		return storage.URLRecord{}, err
+	}
 	for {
 		b, _, err := s.reader.ReadLine()
 		if err != nil {
-			return "", err
+			break
 		}
 		record := strings.Split(string(b), ",")
-		if record[0] == key {
-			return record[1], nil
+		if key == record[0] {
+			return storage.URLRecord{
+				Short:    record[0],
+				Original: record[1],
+			}, nil
 		}
 	}
+	return storage.URLRecord{}, errors.New("errNotFound")
 }
 
-func (s *store) Set(key, value string) (err error) {
-	s.file.Seek(0, io.SeekEnd)
-	record := []string{key, value}
+func (s *store) SelectByUID(uid string) ([]storage.URLRecord, error) {
+	var result []storage.URLRecord
+
+	_, err := s.file.Seek(0, io.SeekStart)
+	if err != nil {
+		return nil, err
+	}
+	for {
+		b, _, err := s.reader.ReadLine()
+		if err != nil {
+			break
+		}
+		record := strings.Split(string(b), ",")
+		if record[2] == uid {
+			result = append(result, storage.URLRecord{
+				Short:    record[0],
+				Original: record[1],
+				UserID:   record[2],
+			})
+		}
+	}
+	return result, nil
+}
+
+func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
+
+	_, err := s.file.Seek(0, io.SeekStart)
+	if err != nil {
+		return storage.URLRecord{}, err
+	}
+	for {
+		b, _, err := s.reader.ReadLine()
+		if err != nil {
+			break
+		}
+		record := strings.Split(string(b), ",")
+		if record[2] == original {
+			return storage.URLRecord{
+				Short:    record[0],
+				Original: record[1],
+				UserID:   record[2],
+			}, nil
+		}
+	}
+	return storage.URLRecord{}, errors.New("notFound")
+}
+
+func (s *store) Save(short, original, userID string) error {
+	_, err := s.file.Seek(0, io.SeekEnd)
+	if err != nil {
+		return err
+	}
+
+	record := []string{short, original, userID}
 
 	_, err = s.writer.WriteString(strings.Join(record, ",") + "\n")
 	if err != nil {
@@ -58,7 +118,7 @@ func (s *store) Set(key, value string) (err error) {
 }
 
 func (s *store) IsExist(key string) bool {
-	_, err := s.Get(key)
+	_, err := s.GetByShort(key)
 	return err == nil
 }
 
@@ -67,4 +127,8 @@ func (s *store) Lock() {
 }
 func (s *store) Unlock() {
 	s.fileMutex.Unlock()
+}
+
+func (s *store) Ping() error {
+	return nil
 }

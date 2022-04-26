@@ -13,22 +13,15 @@ func TestInmem(t *testing.T) {
 		require.IsType(t, &store{}, s)
 	})
 
-	t.Run("Write storage test", func(t *testing.T) {
-		s, err := New()
-		require.NoError(t, err)
-
-		err = s.Set("test-key", "test-value")
-		require.NoError(t, err)
-	})
-
 	t.Run("Read storage test", func(t *testing.T) {
 		s, err := New()
 		require.NoError(t, err)
 
-		s.Set("test-key", "test-value")
-		v, err := s.Get("test-key")
+		err = s.Save("test-key", "test-value", "0")
+		require.NoError(t, err)
+		v, err := s.GetByShort("test-key")
 
 		require.NoError(t, err)
-		require.Equal(t, "test-value", v)
+		require.Equal(t, "test-value", v.Original)
 	})
 }

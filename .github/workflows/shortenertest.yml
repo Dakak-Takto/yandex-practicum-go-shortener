@@ -111,14 +111,14 @@ jobs:
               -binary-path=cmd/shortener/shortener
 
       - name: "Code increment #9"
-        if: ${{ false }}
+        if: always()
         run: |
           shortenertest -test.v -test.run=^TestIteration9$ \
               -source-path=. \
               -binary-path=cmd/shortener/shortener
 
       - name: "Code increment #10"
-        if: ${{ false }}
+        if: always()
         run: |
           shortenertest -test.v -test.run=^TestIteration10$ \
               -source-path=. \
@@ -126,21 +126,21 @@ jobs:
               -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #11"
-        if: ${{ false }}
+        if: always()
         run: |
           shortenertest -test.v -test.run=^TestIteration11$ \
               -binary-path=cmd/shortener/shortener \
               -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #12"
-        if: ${{ false }}
+        if: always()
         run: |
           shortenertest -test.v -test.run=^TestIteration12$ \
               -binary-path=cmd/shortener/shortener \
               -database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable'
 
       - name: "Code increment #13"
-        if: ${{ false }}
+        if: always()
         run: |
           shortenertest -test.v -test.run=^TestIteration13$ \
               -binary-path=cmd/shortener/shortener \
