@@ -15,4 +15,9 @@ func (a application) deleteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = uid
+	var shorts []string
+	render.DecodeJSON(r.Body, &shorts)
+
+	render.Status(r, http.StatusAccepted)
+	render.PlainText(w, r, "")
 }

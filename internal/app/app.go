@@ -51,7 +51,7 @@ func (app *application) Run() error {
 	router.Post("/", app.legacyPostHandler)
 	router.Post("/api/shorten", app.postHandler)
 	router.Get("/api/user/urls", app.getUserURLs)
-	router.Get("/api/user/urls", app.deleteHandler)
+	router.Delete("/api/user/urls", app.deleteHandler)
 	router.Post("/api/shorten/batch", app.batchPostHandler)
 
 	//Run
