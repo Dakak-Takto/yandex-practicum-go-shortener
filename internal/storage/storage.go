@@ -10,12 +10,14 @@ type Storage interface {
 	Lock()
 	Unlock()
 	Ping() error
+	Delete(keys []string)
 }
 
 type URLRecord struct {
 	Short    string `json:"short_url" db:"short"`
 	Original string `json:"original_url" db:"original"`
 	UserID   string `json:"-" db:"user_id"`
+	Deleted  bool   `json:"-" db:"deleted"`
 }
 
 var (

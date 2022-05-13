@@ -55,11 +55,6 @@ func (s *store) Save(short, original, userID string) error {
 	return nil
 }
 
-func (s *store) IsExist(key string) bool {
-	_, err := s.GetByShort(key)
-	return err == nil
-}
-
 func (s *store) Lock() {
 	s.dataMutex.Lock()
 }
@@ -71,3 +66,5 @@ func (s *store) Unlock() {
 func (s *store) Ping() error {
 	return nil
 }
+
+func (s *store) Delete(keys []string) {}

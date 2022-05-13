@@ -46,11 +46,12 @@ func (app *application) Run() error {
 	router.Use(app.SetCookie)
 
 	//Routes
-	router.Get("/{key}", app.GetHandler)
+	router.Get("/{key}", app.getHandler)
 	router.Get("/ping", app.pingDatabase)
-	router.Post("/", app.LegacyPostHandler)
-	router.Post("/api/shorten", app.PostHandler)
+	router.Post("/", app.legacyPostHandler)
+	router.Post("/api/shorten", app.postHandler)
 	router.Get("/api/user/urls", app.getUserURLs)
+	router.Get("/api/user/urls", app.deleteHandler)
 	router.Post("/api/shorten/batch", app.batchPostHandler)
 
 	//Run

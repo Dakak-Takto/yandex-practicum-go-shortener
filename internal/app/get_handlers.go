@@ -9,7 +9,7 @@ import (
 )
 
 //search exist short url in storage,return temporary redirect if found
-func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) getHandler(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 	url, err := app.store.GetByShort(key)
 	if err != nil {

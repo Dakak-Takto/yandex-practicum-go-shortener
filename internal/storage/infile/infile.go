@@ -117,11 +117,6 @@ func (s *store) Save(short, original, userID string) error {
 	return s.writer.Flush()
 }
 
-func (s *store) IsExist(key string) bool {
-	_, err := s.GetByShort(key)
-	return err == nil
-}
-
 func (s *store) Lock() {
 	s.fileMutex.Lock()
 }
@@ -132,3 +127,5 @@ func (s *store) Unlock() {
 func (s *store) Ping() error {
 	return nil
 }
+
+func (s *store) Delete(keys []string) {}
