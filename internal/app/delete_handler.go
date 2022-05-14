@@ -18,6 +18,8 @@ func (a application) deleteHandler(w http.ResponseWriter, r *http.Request) {
 	var shorts []string
 	render.DecodeJSON(r.Body, &shorts)
 
+	a.store.Delete(shorts)
+
 	render.Status(r, http.StatusAccepted)
 	render.PlainText(w, r, "")
 }

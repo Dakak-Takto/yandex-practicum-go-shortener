@@ -71,7 +71,7 @@ func (d *database) Ping() error {
 }
 
 func (d *database) Delete(keys []string) {
-	_, err := d.db.Exec("UPDATE shorts SET deleted = true WHERE short ANY($1)")
+	_, err := d.db.Exec("UPDATE shorts SET deleted = true WHERE short = any($1)", keys)
 	if err != nil {
 		log.Println("error set deleted: ", err)
 	}

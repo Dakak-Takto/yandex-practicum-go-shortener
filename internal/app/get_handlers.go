@@ -16,6 +16,10 @@ func (app *application) getHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
+	if url.Deleted {
+		render.Status(r, http.StatusGone)
+		render.PlainText(w, r, "")
+	}
 	http.Redirect(w, r, url.Original, http.StatusTemporaryRedirect)
 }
 
