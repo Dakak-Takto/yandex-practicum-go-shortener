@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/render"
 )
 
-func (a application) deleteHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) deleteHandler(w http.ResponseWriter, r *http.Request) {
 	uid, ok := r.Context().Value(ctxValueNameUID).(string)
 
 	if !ok {
@@ -18,7 +18,7 @@ func (a application) deleteHandler(w http.ResponseWriter, r *http.Request) {
 	var shorts []string
 	render.DecodeJSON(r.Body, &shorts)
 
-	go a.store.Delete(shorts, uid)
+	go app.store.Delete(shorts, uid)
 
 	render.Status(r, http.StatusAccepted)
 	render.PlainText(w, r, "")
