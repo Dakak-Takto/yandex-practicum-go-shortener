@@ -67,4 +67,4 @@ func (s *store) Ping() error {
 	return nil
 }
 
-func (s *store) Delete(keys []string, uid string) {}
+func (s *store) Delete(uid string, keys ...string) {}

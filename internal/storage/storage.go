@@ -10,7 +10,7 @@ type Storage interface {
 	Lock()
 	Unlock()
 	Ping() error
-	Delete(keys []string, uid string)
+	Delete(uid string, keys ...string)
 }
 
 type URLRecord struct {

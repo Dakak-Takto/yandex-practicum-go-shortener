@@ -14,11 +14,10 @@ func (app *application) deleteHandler(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, render.M{"error": "not authorized"})
 		return
 	}
-	_ = uid
 	var shorts []string
 	render.DecodeJSON(r.Body, &shorts)
 
-	go app.store.Delete(shorts, uid)
+	go app.store.Delete(uid, shorts...)
 
 	render.Status(r, http.StatusAccepted)
 	render.PlainText(w, r, "")
