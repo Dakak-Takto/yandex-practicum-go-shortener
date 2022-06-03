@@ -3,11 +3,11 @@ module yandex-practicum-go-shortener
 go 1.18
 
 require (
-	github.com/caarlos0/env/v6 v6.9.2
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-chi/httplog v0.2.4
 	github.com/go-chi/render v1.0.1
 	github.com/gorilla/securecookie v1.1.1
+	github.com/gorilla/sessions v1.2.1
 	github.com/jackc/pgconn v1.12.1
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/jackc/pgx/v4 v4.16.1
