@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"github.com/gorilla/sessions"
 
 	"yandex-practicum-go-shortener/internal/short/model"
+	"yandex-practicum-go-shortener/internal/short/usecase"
 )
 
 type handler struct {
@@ -60,7 +62,6 @@ func (h *handler) getRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, short.Location, http.StatusTemporaryRedirect)
-	return
 }
 
 type userShortResponse struct {
@@ -69,7 +70,7 @@ type userShortResponse struct {
 }
 
 func (h *handler) getUserShorts(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("userID").(string)
+	userID := r.Context().Value(userIDctxKeyName).(string)
 
 	shorts, err := h.usecase.GetUserShorts(userID)
 	if err != nil {
@@ -101,7 +102,7 @@ type makeShortRequest struct {
 }
 
 func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value("user_id").(string)
+	userID := r.Context().Value(userIDctxKeyName).(string)
 
 	if strings.Contains(r.Header.Get("Content-Type"), "application/json") {
 		var request makeShortRequest
@@ -136,14 +137,30 @@ func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
 
 	locationURL, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		log.Println("error read body:", err)
 		return
 	}
 
 	short, err := h.usecase.CreateNewShort(string(locationURL), userID)
 	if err != nil {
+		if errors.Is(err, usecase.ErrDuplicate) {
+			short, err := h.usecase.FindByLocation(string(locationURL))
+			if err != nil {
+				log.Println(err)
+				http.Error(w, "", http.StatusBadRequest)
+				return
+			}
+
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(short.Location))
+			return
+		}
+
+		log.Println(err)
 		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(short.Location))
+	fmt.Fprintf(w, "%s/%s", "base_url", short.Key)
 }

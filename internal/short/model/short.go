@@ -2,8 +2,8 @@ package model
 
 type (
 	Short struct {
-		Key      string `json:"short_url" db:"key"`
-		Location string `json:"original_url" db:"location"`
+		Key      string `json:"short_url" db:"_key"`
+		Location string `json:"original_url" db:"_location"`
 		UserID   string `json:"-" db:"user_id"`
 		Deleted  bool   `json:"-" db:"deleted"`
 	}
