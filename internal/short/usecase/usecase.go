@@ -75,3 +75,23 @@ func (s *shortUsecase) Save(short *model.Short) error {
 func (s *shortUsecase) Delete(key ...string) error {
 	return nil
 }
+
+type makeShortsBatchDTO struct {
+	Location      string
+	CorrelationID string
+	UserID        string
+}
+
+func (s *shortUsecase) CreateNewShortBatch(items ...makeShortsBatchDTO) (map[string]*model.Short, error) {
+
+	var shorts map[string]*model.Short
+
+	for _, item := range items {
+		short, err := s.CreateNewShort(item.Location, item.UserID)
+		if err != nil {
+			continue
+		}
+		shorts[item.CorrelationID] = short
+	}
+	return shorts, nil
+}

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/sessions"
 
 	"yandex-practicum-go-shortener/internal/short/model"
@@ -29,23 +30,25 @@ func New(usecase model.ShortUsecase, cookieStore *sessions.CookieStore) *handler
 	}
 }
 
-func (h *handler) Register(router *chi.Mux) {
+func (h *handler) Register(router chi.Router) {
+	router.Use(middleware.Compress(5, "text/*", "application/json"))
+
 	router.Use(h.auth)
 	router.Route("/", func(r chi.Router) {
 		router.Get("/{key}", h.getRedirect)
-		// router.Get("/ping", app.pingDatabase)
+		router.Get("/ping", h.pingDatabase)
 		router.Post("/", h.makeShort)
 	})
 
-	// router.Route("/api/shorten", func(r chi.Router) {
-	// 	r.Post("/", app.postHandler)
-	// 	r.Post("/batch", app.batchPostHandler)
-	// })
+	router.Route("/api/shorten", func(r chi.Router) {
+		r.Post("/", h.makeShort)
+		r.Post("/batch", h.makeShortBatch)
+	})
 
-	// router.Route("/api/user/urls", func(r chi.Router) {
-	// 	r.Get("/", app.getUserURLs)
-	// 	r.Delete("/", app.deleteHandler)
-	// })
+	router.Route("/api/user/urls", func(r chi.Router) {
+		r.Get("/", h.getUserShorts)
+		r.Delete("/", h.deleteShorts)
+	})
 
 }
 
@@ -163,4 +166,26 @@ func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	fmt.Fprintf(w, "%s/%s", "base_url", short.Key)
+}
+
+type makeShortBatchRequest struct {
+	OriginalURL   string `json:"original_url"`
+	CorrelationID string `json:"correlation_id"`
+}
+
+func (h *handler) makeShortBatch(w http.ResponseWriter, r *http.Request) {
+	var req []makeShortBatchRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *handler) deleteShorts(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *handler) pingDatabase(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
 }
