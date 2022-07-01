@@ -2,9 +2,10 @@ package usecase
 
 import (
 	"errors"
-	"yandex-practicum-go-shortener/internal/short/model"
-	"yandex-practicum-go-shortener/internal/short/repo"
-	"yandex-practicum-go-shortener/pkg/random"
+
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/repo"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/pkg/random"
 )
 
 type shortUsecase struct {

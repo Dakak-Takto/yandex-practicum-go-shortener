@@ -3,7 +3,8 @@ package handler
 import (
 	"context"
 	"net/http"
-	"yandex-practicum-go-shortener/pkg/random"
+
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/pkg/random"
 )
 
 type userIDctxKey string

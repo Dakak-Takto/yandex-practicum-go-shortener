@@ -3,12 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
-	handler "yandex-practicum-go-shortener/internal/short/handlers"
-	"yandex-practicum-go-shortener/internal/short/repo"
-	"yandex-practicum-go-shortener/internal/short/usecase"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/sessions"
+
+	handler "github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/handlers"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/repo"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/usecase"
 )
 
 func main() {

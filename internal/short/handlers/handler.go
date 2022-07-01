@@ -14,8 +14,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/sessions"
 
-	"yandex-practicum-go-shortener/internal/short/model"
-	"yandex-practicum-go-shortener/internal/short/usecase"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/usecase"
 )
 
 type handler struct {

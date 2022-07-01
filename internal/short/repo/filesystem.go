@@ -2,7 +2,8 @@ package repo
 
 import (
 	"os"
-	"yandex-practicum-go-shortener/internal/short/model"
+
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
 )
 
 type fileRepo struct {

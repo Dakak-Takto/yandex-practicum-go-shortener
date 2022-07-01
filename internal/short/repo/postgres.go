@@ -2,12 +2,13 @@ package repo
 
 import (
 	"errors"
-	"yandex-practicum-go-shortener/internal/short/model"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
 )
 
 type postgresRepo struct {

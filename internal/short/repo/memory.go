@@ -2,7 +2,8 @@ package repo
 
 import (
 	"fmt"
-	"yandex-practicum-go-shortener/internal/short/model"
+
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
 )
 
 type memoryRepo struct {
