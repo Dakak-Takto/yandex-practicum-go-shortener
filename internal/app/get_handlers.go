@@ -9,12 +9,16 @@ import (
 )
 
 //search exist short url in storage,return temporary redirect if found
-func (app *application) GetHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) getHandler(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 	url, err := app.store.GetByShort(key)
 	if err != nil {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
+	}
+	if url.Deleted {
+		render.Status(r, http.StatusGone)
+		render.PlainText(w, r, "")
 	}
 	http.Redirect(w, r, url.Original, http.StatusTemporaryRedirect)
 }

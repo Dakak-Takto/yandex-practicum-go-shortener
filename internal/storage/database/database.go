@@ -26,7 +26,7 @@ func New(dsn string) (storage.Storage, error) {
 		return nil, err
 	}
 
-	result, err := db.Exec(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255), original VARCHAR(255) UNIQUE, user_id VARCHAR(255) )`)
+	result, err := db.Exec(`CREATE TABLE IF NOT EXISTS shorts (short VARCHAR(255), original VARCHAR(255) UNIQUE, user_id VARCHAR(255), deleted BOOLEAN default false)`)
 
 	if err != nil {
 		return nil, err
@@ -40,17 +40,17 @@ func New(dsn string) (storage.Storage, error) {
 }
 
 func (d *database) GetByShort(key string) (row storage.URLRecord, err error) {
-	err = d.db.Get(&row, "SELECT short, original, user_id FROM shorts WHERE short=$1", key)
+	err = d.db.Get(&row, "SELECT short, original, user_id, deleted FROM shorts WHERE short=$1", key)
 	return row, err
 }
 
 func (d *database) SelectByUID(uid string) (rows []storage.URLRecord, err error) {
-	err = d.db.Select(&rows, "SELECT short, original, user_id FROM shorts WHERE user_id = $1", uid)
+	err = d.db.Select(&rows, "SELECT short, original, user_id, deleted FROM shorts WHERE user_id = $1", uid)
 	return rows, err
 }
 
 func (d *database) GetByOriginal(original string) (row storage.URLRecord, err error) {
-	err = d.db.Get(&row, "SELECT short, original, user_id FROM shorts WHERE original = $1", original)
+	err = d.db.Get(&row, "SELECT short, original, user_id, deleted FROM shorts WHERE original = $1", original)
 	return row, err
 }
 func (d *database) Save(short, original, userID string) error {
@@ -66,16 +66,16 @@ func (d *database) Save(short, original, userID string) error {
 	return err
 }
 
-func (d *database) IsExist(key string) bool {
-	return false
-}
-func (d *database) Lock() {
-
-}
-func (d *database) Unlock() {
-
-}
-
 func (d *database) Ping() error {
 	return d.db.Ping()
 }
+
+func (d *database) Delete(uid string, keys ...string) {
+	_, err := d.db.Exec("UPDATE shorts SET deleted = true WHERE short = any($1) AND user_id = $2", keys, uid)
+	if err != nil {
+		log.Println("error set deleted: ", err)
+	}
+}
+
+func (d *database) Lock()   {}
+func (d *database) Unlock() {}

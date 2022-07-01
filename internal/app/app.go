@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/rs/zerolog"
 
+	"yandex-practicum-go-shortener/internal/random"
 	"yandex-practicum-go-shortener/internal/storage"
 )
 
@@ -46,12 +47,21 @@ func (app *application) Run() error {
 	router.Use(app.SetCookie)
 
 	//Routes
-	router.Get("/{key}", app.GetHandler)
-	router.Get("/ping", app.pingDatabase)
-	router.Post("/", app.LegacyPostHandler)
-	router.Post("/api/shorten", app.PostHandler)
-	router.Get("/api/user/urls", app.getUserURLs)
-	router.Post("/api/shorten/batch", app.batchPostHandler)
+	router.Route("/", func(r chi.Router) {
+		router.Get("/{key}", app.getHandler)
+		router.Get("/ping", app.pingDatabase)
+		router.Post("/", app.legacyPostHandler)
+	})
+
+	router.Route("/api/shorten", func(r chi.Router) {
+		r.Post("/", app.postHandler)
+		r.Post("/batch", app.batchPostHandler)
+	})
+
+	router.Route("/api/user/urls", func(r chi.Router) {
+		r.Get("/", app.getUserURLs)
+		r.Delete("/", app.deleteHandler)
+	})
 
 	//Run
 	app.logger.Printf("Run app on %s", app.addr)
@@ -62,6 +72,22 @@ func (app *application) Run() error {
 	server.Handler = router
 
 	return server.ListenAndServe()
+}
+
+/*generating unique key in cycle. If key will be exists in storage len be increase by one for each iteration*/
+func (app *application) generateKey(startLenght int) string {
+	var n = startLenght
+
+	for {
+		short := random.String(n)
+		if _, err := app.store.GetByShort(short); err == nil {
+			n = n + 1
+			continue
+		} else {
+			return short
+		}
+	}
+
 }
 
 //Application option declaration

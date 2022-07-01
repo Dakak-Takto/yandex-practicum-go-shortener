@@ -18,7 +18,7 @@ const (
 )
 
 //accept json, make short url, write in storage, return short url
-func (app *application) PostHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) postHandler(w http.ResponseWriter, r *http.Request) {
 
 	uid, ok := r.Context().Value(ctxValueNameUID).(string)
 	app.logger.Print("UID:", uid)
@@ -135,7 +135,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 }
 
 //accept text/plain body with url, make short url, write in storage, return short url in body
-func (app *application) LegacyPostHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) legacyPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	uid, ok := r.Context().Value(ctxValueNameUID).(string)
 
