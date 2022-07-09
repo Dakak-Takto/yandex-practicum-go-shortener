@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"yandex-practicum-go-shortener/internal/random"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
 )
 
 type ctxValueTypeUID string

@@ -2,23 +2,22 @@ package main
 
 import (
 	"crypto/aes"
-	"database/sql"
-	"encoding/json"
+	_ "database/sql"
+	_ "encoding/json"
 	"flag"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/gorilla/securecookie"
 
-	"yandex-practicum-go-shortener/internal/app"
-	"yandex-practicum-go-shortener/internal/storage"
-	"yandex-practicum-go-shortener/internal/storage/database"
-	"yandex-practicum-go-shortener/internal/storage/infile"
-	"yandex-practicum-go-shortener/internal/storage/inmem"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/app"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/database"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/infile"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/inmem"
 )
-
-var _ json.Number        //использование известной библиотеки кодирования JSON
-var _ sql.IsolationLevel //использование библиотеки database/sql
 
 var cfg struct {
 	Addr            string `env:"SERVER_ADDRESS" envDefault:"localhost:8080"`
@@ -47,6 +46,11 @@ func main() {
 		app.WithAddr(cfg.Addr),
 		app.WithSecureCookie(secureCookie),
 	)
+
+	//pprof
+	go func() {
+		http.ListenAndServe("localhost:8008", nil)
+	}()
 
 	//Run app
 	log.Fatal(app.Run())

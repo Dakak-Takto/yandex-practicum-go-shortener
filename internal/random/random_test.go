@@ -14,3 +14,9 @@ func TestString(t *testing.T) {
 		}
 	})
 }
+
+func BenchmarkRandomBytes(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		RandomBytes(10)
+	}
+}

@@ -10,8 +10,8 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/rs/zerolog"
 
-	"yandex-practicum-go-shortener/internal/random"
-	"yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
 )
 
 type Application interface {

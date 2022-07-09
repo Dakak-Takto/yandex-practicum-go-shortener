@@ -10,7 +10,7 @@ import (
 
 	"github.com/go-chi/render"
 
-	"yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
 )
 
 const (
