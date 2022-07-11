@@ -100,6 +100,7 @@ func (h *handler) getUserShorts(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	w.Header().Add("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(userShorts); err != nil {
 		log.Printf("error decode json: %s\n", err)
 	}
@@ -161,7 +162,9 @@ func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
 			}
 
 			w.WriteHeader(http.StatusConflict)
-			w.Write([]byte(short.Location))
+			if _, err := w.Write([]byte(short.Location)); err != nil {
+				h.log.Warn(err)
+			}
 			return
 		}
 
@@ -183,13 +186,27 @@ func (h *handler) makeShortBatch(w http.ResponseWriter, r *http.Request) {
 	var req []makeShortBatchRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 }
 
 func (h *handler) deleteShorts(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(userIDctxKeyName).(string)
 
+	h.log.Debugf("userID: %s", userID)
+
+	var shorts []string
+	if err := json.NewDecoder(r.Body).Decode(&shorts); err != nil {
+		http.Error(w, "", http.StatusBadRequest)
+	}
+
+	if err := h.usecase.Delete(shorts...); err != nil {
+		h.log.Warn(err)
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+	return
 }
 
 func (h *handler) pingDatabase(w http.ResponseWriter, r *http.Request) {
