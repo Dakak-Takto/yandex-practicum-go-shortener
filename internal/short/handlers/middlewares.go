@@ -24,10 +24,12 @@ func (h *handler) auth(next http.Handler) http.Handler {
 			return
 		}
 
-		userID, exist := session.Values[userIDSessionValueName].(string)
+		userID, ok := session.Values[userIDSessionValueName].(string)
 
-		if !exist {
+		if !ok {
 			userID = random.String(5)
+			session.Values[userIDSessionValueName] = userID
+			session.Save(r, w)
 		}
 
 		ctx := context.WithValue(r.Context(), userIDctxKeyName, userID)

@@ -13,6 +13,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/gorilla/sessions"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/usecase"
@@ -20,13 +21,16 @@ import (
 
 type handler struct {
 	usecase     model.ShortUsecase
+	baseURL     string
 	cookieStore *sessions.CookieStore
+	log         *logrus.Logger
 }
 
-func New(usecase model.ShortUsecase, cookieStore *sessions.CookieStore) *handler {
+func New(usecase model.ShortUsecase, baseURL string, cookieStore *sessions.CookieStore, log *logrus.Logger) *handler {
 	return &handler{
 		usecase:     usecase,
 		cookieStore: cookieStore,
+		baseURL:     baseURL,
 	}
 }
 
@@ -129,7 +133,7 @@ func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
 			Result string `json:"result"`
 		}
 
-		result.Result = fmt.Sprintf("%s/%s", "base_url", short.Key)
+		result.Result = fmt.Sprintf("%s/%s", h.baseURL, short.Key)
 
 		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(result); err != nil {

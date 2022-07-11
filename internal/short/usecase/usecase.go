@@ -6,13 +6,14 @@ import (
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/repo"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/pkg/random"
+	"github.com/sirupsen/logrus"
 )
 
 type shortUsecase struct {
 	repo model.ShortRepository
 }
 
-func New(repository model.ShortRepository) model.ShortUsecase {
+func New(repository model.ShortRepository, log *logrus.Logger) model.ShortUsecase {
 	return &shortUsecase{
 		repo: repository,
 	}
