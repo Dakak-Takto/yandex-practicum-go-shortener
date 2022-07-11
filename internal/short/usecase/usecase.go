@@ -86,7 +86,7 @@ type makeShortsBatchDTO struct {
 
 func (s *shortUsecase) CreateNewShortBatch(items ...makeShortsBatchDTO) (map[string]*model.Short, error) {
 
-	var shorts map[string]*model.Short
+	shorts := make(map[string]*model.Short, len(items))
 
 	for _, item := range items {
 		short, err := s.CreateNewShort(item.Location, item.UserID)

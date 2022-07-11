@@ -94,7 +94,7 @@ func (h *handler) getUserShorts(w http.ResponseWriter, r *http.Request) {
 
 	for _, short := range shorts {
 		userShorts = append(userShorts, userShortResponse{
-			ShortURL:    fmt.Sprintf("%s/%s", "base_url", short.Key),
+			ShortURL:    fmt.Sprintf("%s/%s", h.baseURL, short.Key),
 			OriginalURL: short.Location,
 		})
 	}
@@ -136,6 +136,7 @@ func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
 		result.Result = fmt.Sprintf("%s/%s", h.baseURL, short.Key)
 
 		w.WriteHeader(http.StatusCreated)
+		w.Header().Add("Content-Type", "application/json")
 		if err := json.NewEncoder(w).Encode(result); err != nil {
 			log.Printf("error encode result: %s", err)
 		}
