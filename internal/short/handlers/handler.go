@@ -81,12 +81,14 @@ func (h *handler) getUserShorts(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(userIDctxKeyName).(string)
 
 	shorts, err := h.usecase.GetUserShorts(userID)
-	if err != nil {
-		http.Error(w, "", http.StatusNotFound)
+	if err != nil && !errors.Is(err, model.ErrNotFound) {
+		h.log.Warn(err)
+		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
 	if shorts == nil {
+		h.log.Warn(err)
 		http.Error(w, "", http.StatusNoContent)
 		return
 	}
@@ -206,7 +208,6 @@ func (h *handler) deleteShorts(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusAccepted)
-	return
 }
 
 func (h *handler) pingDatabase(w http.ResponseWriter, r *http.Request) {

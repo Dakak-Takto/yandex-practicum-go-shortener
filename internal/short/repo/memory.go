@@ -30,7 +30,7 @@ func (m *memoryRepo) GetOneByLocation(location string) (*model.Short, error) {
 			return short, nil
 		}
 	}
-	return nil, fmt.Errorf("not found")
+	return nil, model.ErrNotFound
 }
 
 func (m *memoryRepo) GetByUserID(userID string) ([]*model.Short, error) {
@@ -44,7 +44,7 @@ func (m *memoryRepo) GetByUserID(userID string) ([]*model.Short, error) {
 	}
 
 	if len(shorts) == 0 {
-		return nil, fmt.Errorf("not found")
+		return nil, model.ErrNotFound
 	}
 
 	return shorts, nil

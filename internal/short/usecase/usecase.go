@@ -1,10 +1,7 @@
 package usecase
 
 import (
-	"errors"
-
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/model"
-	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/short/repo"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/pkg/random"
 	"github.com/sirupsen/logrus"
 )
@@ -33,9 +30,6 @@ func (s *shortUsecase) CreateNewShort(location string, userID string) (*model.Sh
 	err := s.repo.Insert(&short)
 	if err != nil {
 		s.log.Warn(err)
-		if errors.Is(err, repo.ErrDuplicate) {
-			return nil, ErrDuplicate
-		}
 		return nil, err
 	}
 	return &short, nil

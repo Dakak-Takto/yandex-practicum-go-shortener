@@ -1,5 +1,7 @@
 package model
 
+import "errors"
+
 type (
 	Short struct {
 		Key      string `json:"short_url" db:"_key"`
@@ -24,4 +26,9 @@ type (
 		Insert(*Short) error
 		Delete(key ...string) error
 	}
+)
+
+var (
+	ErrDuplicate = errors.New("error duplicate")
+	ErrNotFound  = errors.New("error not found")
 )

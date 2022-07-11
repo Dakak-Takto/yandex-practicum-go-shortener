@@ -87,7 +87,7 @@ func (p *postgresRepo) Insert(short *model.Short) error {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) {
 			if pgErr.Code == pgerrcode.UniqueViolation {
-				return ErrDuplicate
+				return model.ErrDuplicate
 			}
 		}
 		return err
