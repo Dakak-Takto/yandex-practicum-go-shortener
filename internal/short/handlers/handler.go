@@ -32,6 +32,7 @@ func New(usecase model.ShortUsecase, baseURL string, cookieStore *sessions.Cooki
 		usecase:     usecase,
 		cookieStore: cookieStore,
 		baseURL:     baseURL,
+		log:         log,
 	}
 }
 
