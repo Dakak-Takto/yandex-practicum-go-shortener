@@ -31,8 +31,14 @@ func (h *handler) auth(next http.Handler) http.Handler {
 		if !ok {
 			userID = random.String(5)
 			session.Values[userIDSessionValueName] = userID
-			session.Save(r, w)
+			err := session.Save(r, w)
+			if err != nil {
+				h.log.Warn(err)
+			}
+			h.log.Debugf("new user")
 		}
+
+		h.log.Debugf("userID: %s", userID)
 
 		ctx := context.WithValue(r.Context(), userIDctxKeyName, userID)
 		next.ServeHTTP(w, r.WithContext(ctx))

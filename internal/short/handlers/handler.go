@@ -37,9 +37,8 @@ func New(usecase model.ShortUsecase, baseURL string, cookieStore *sessions.Cooki
 }
 
 func (h *handler) Register(router chi.Router) {
-	router.Use(middleware.Compress(5, "text/*", "application/json"))
-
 	router.Use(h.auth, middleware.Compress(gzip.BestSpeed, "text/plain, application/json"), h.decompress)
+
 	router.Route("/", func(r chi.Router) {
 		router.Get("/{key}", h.getRedirect)
 		router.Get("/ping", h.pingDatabase)
