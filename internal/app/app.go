@@ -6,9 +6,8 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httplog"
 	"github.com/gorilla/securecookie"
-	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
@@ -23,7 +22,7 @@ type application struct {
 	baseURL      string
 	addr         string
 	secureCookie *securecookie.SecureCookie
-	logger       zerolog.Logger
+	log          *logrus.Logger
 }
 
 func New(opts ...Option) Application {
@@ -39,9 +38,6 @@ func (app *application) Run() error {
 	router := chi.NewRouter()
 
 	//Middlewares
-	app.logger = httplog.NewLogger("httplog", httplog.Options{LogLevel: "debug", JSON: false})
-	router.Use(httplog.Handler(app.logger))
-
 	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
 	router.Use(app.decompress)
 	router.Use(app.SetCookie)
@@ -64,7 +60,7 @@ func (app *application) Run() error {
 	})
 
 	//Run
-	app.logger.Printf("Run app on %s", app.addr)
+	app.log.Infof("Run app on %s", app.addr)
 
 	//Http server
 	server := http.Server{}
@@ -118,5 +114,11 @@ func WithAddr(addr string) Option {
 func WithSecureCookie(s *securecookie.SecureCookie) Option {
 	return func(app *application) {
 		app.secureCookie = s
+	}
+}
+
+func WithLogger(log *logrus.Logger) Option {
+	return func(app *application) {
+		app.log = log
 	}
 }

@@ -21,22 +21,22 @@ func (app *application) decompress(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		if !strings.Contains(r.Header.Get("Content-Encoding"), "gzip") {
-			app.logger.Print("not contains Content-Encoding: gzip header. Continue.")
+			app.log.Debug("not contains Content-Encoding: gzip header. Continue.")
 			next.ServeHTTP(w, r)
 			return
 		}
 
-		app.logger.Print("Content-Encoding: gzip header. Try decompress.")
+		app.log.Debug("Content-Encoding: gzip header. Try decompress.")
 		gzReader, err := gzip.NewReader(r.Body)
 		if err != nil {
-			app.logger.Print("error read body:", err)
+			app.log.Debug("error read body:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		err = gzReader.Close()
 		if err != nil {
-			app.logger.Print("error close reader:", err)
+			app.log.Debug("error close reader:", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -55,20 +55,20 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 		uid, err := func() (string, error) {
 			cookie, err := r.Cookie("token")
 			if err != nil {
-				app.logger.Print("cookie: token not found.", err)
+				app.log.Debug("cookie: token not found.", err)
 				return "", err
 			}
 
 			decoded := make(map[string]string)
 			err = app.secureCookie.Decode("token", cookie.Value, &decoded)
 			if err != nil {
-				app.logger.Print("cookie: token decode failed.", err)
+				app.log.Debug("cookie: token decode failed.", err)
 				return "", err
 			}
 
 			uid := decoded["uid"]
 
-			app.logger.Print("cookie: uid:", uid)
+			app.log.Debug("cookie: uid:", uid)
 			return uid, nil
 		}()
 
@@ -78,7 +78,7 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 		if err != nil {
 			uidBytes, err := random.RandomBytes(8)
 			if err != nil {
-				app.logger.Printf("error generate token: %s", err)
+				app.log.Debugf("error generate token: %s", err)
 				http.Error(w, "something went wrong", http.StatusInternalServerError)
 				return
 			}
@@ -97,7 +97,7 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 				}
 				http.SetCookie(w, cookie)
 			} else {
-				app.logger.Printf("error encode token: %s", err)
+				app.log.Debugf("error encode token: %s", err)
 			}
 		}
 		/*

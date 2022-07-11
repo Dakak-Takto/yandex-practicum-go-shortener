@@ -5,12 +5,15 @@ import (
 	_ "database/sql"
 	_ "encoding/json"
 	"flag"
-	"log"
+	"fmt"
 	"net/http"
 	_ "net/http/pprof"
+	"path"
+	"runtime"
 
 	"github.com/caarlos0/env/v6"
 	"github.com/gorilla/securecookie"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/app"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
@@ -28,16 +31,60 @@ var cfg struct {
 
 func main() {
 
-	processEnv()
-	processFlags()
+	log := logrus.StandardLogger()
+	log.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat: "15:05:05",
+		FullTimestamp:   true,
+		ForceColors:     true,
+		CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
 
-	//Create storage instance
-	store, err := getStorageInstance()
+			return "", fmt.Sprintf(" %s:%d", path.Base(f.File), f.Line)
+		},
+	})
+	log.SetReportCaller(true)
+	log.SetLevel(logrus.DebugLevel)
+	log.Debug("init logger")
+
+	var err = env.Parse(&cfg)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	var secureCookie = getSecureCookieInstance()
+	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
+	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
+	flag.StringVar(&cfg.DatabaseDSN, "d", "", "dsn string for connection ")
+	flag.Parse()
+
+	//Create storage instance
+	var store storage.Storage
+
+	switch {
+	case cfg.DatabaseDSN != "":
+		log.Debug("use database. dsn:", cfg.DatabaseDSN)
+		store, err = database.New(cfg.DatabaseDSN)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+	case cfg.FileStoragePath != "":
+		log.Debug("use file storage. file storage path:", cfg.FileStoragePath)
+		store, err = infile.New(cfg.FileStoragePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	default:
+
+		log.Debug("use memory storage")
+		store, err = inmem.New()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	hashKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
+	blockKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
+	secureCookie := securecookie.New(hashKey, blockKey)
 
 	//Create app instance
 	app := app.New(
@@ -45,6 +92,7 @@ func main() {
 		app.WithBaseURL(cfg.BaseURL),
 		app.WithAddr(cfg.Addr),
 		app.WithSecureCookie(secureCookie),
+		app.WithLogger(log),
 	)
 
 	//pprof
@@ -54,41 +102,4 @@ func main() {
 
 	//Run app
 	log.Fatal(app.Run())
-}
-
-func processEnv() {
-	var err = env.Parse(&cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func processFlags() {
-	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
-	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
-	flag.StringVar(&cfg.DatabaseDSN, "d", "", "dsn string for connection ")
-	flag.Parse()
-}
-
-func getStorageInstance() (storage.Storage, error) {
-
-	if cfg.DatabaseDSN != "" {
-		log.Println("use database. dsn:", cfg.DatabaseDSN)
-		return database.New(cfg.DatabaseDSN)
-	}
-
-	if cfg.FileStoragePath != "" {
-		log.Println("use file storage. file storage path:", cfg.FileStoragePath)
-		return infile.New(cfg.FileStoragePath)
-	}
-
-	log.Println("use memory storage")
-	return inmem.New()
-}
-
-func getSecureCookieInstance() *securecookie.SecureCookie {
-	hashKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
-	blockKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
-	return securecookie.New(hashKey, blockKey)
 }
