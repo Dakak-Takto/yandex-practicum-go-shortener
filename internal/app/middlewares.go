@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"io"
 	"net/http"
-	"regexp"
 	"strings"
 
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
@@ -149,13 +148,9 @@ func (app *application) httpLog(next http.Handler) http.Handler {
 
 		next.ServeHTTP(rec, r)
 
-		body = reWhiteSpaces.ReplaceAll(body, []byte(""))
-
-		app.log.Debugf("REQT: %s %s %s", r.Method, r.RequestURI, body)
+		app.log.Debugf("REQT: %s %s", r.Method, r.RequestURI)
+		app.log.Debugf("%s", body)
 		app.log.Debugf("RESP: %d %s %s", rec.Status, r.RequestURI, rec.response)
+
 	})
 }
-
-var (
-	reWhiteSpaces = regexp.MustCompile(`(\n+|\s+)`)
-)

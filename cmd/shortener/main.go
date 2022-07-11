@@ -2,7 +2,9 @@ package main
 
 import (
 	"crypto/aes"
+	"database/sql"
 	_ "database/sql"
+	"encoding/json"
 	_ "encoding/json"
 	"flag"
 	"fmt"
@@ -21,6 +23,11 @@ import (
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/database"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/infile"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/inmem"
+)
+
+var (
+	_ json.Decoder
+	_ sql.DB
 )
 
 var cfg struct {
