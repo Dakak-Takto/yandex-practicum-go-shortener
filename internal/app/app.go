@@ -41,6 +41,7 @@ func (app *application) Run() error {
 	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
 	router.Use(app.decompress)
 	router.Use(app.SetCookie)
+	router.Use(app.httpLog)
 
 	//Routes
 	router.Route("/", func(r chi.Router) {

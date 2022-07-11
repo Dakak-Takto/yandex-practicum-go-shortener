@@ -16,6 +16,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/app"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/database"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/infile"
@@ -82,9 +83,12 @@ func main() {
 		}
 	}
 
-	hashKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
-	blockKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
-	secureCookie := securecookie.New(hashKey, blockKey)
+	secret, err := random.RandomBytes(aes.BlockSize * 4)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Infof("cookie secret: %x", secret)
+	secureCookie := securecookie.New(secret[:32], secret[32:])
 
 	//Create app instance
 	app := app.New(

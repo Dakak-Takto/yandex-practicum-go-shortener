@@ -1,10 +1,13 @@
 package app
 
 import (
+	"bytes"
 	"compress/gzip"
 	"context"
 	"encoding/hex"
+	"io"
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
@@ -108,3 +111,51 @@ func (app *application) SetCookie(next http.Handler) http.Handler {
 
 	})
 }
+
+type recorder struct {
+	http.ResponseWriter
+	response []byte
+	Status   int
+}
+
+func (r *recorder) Write(b []byte) (int, error) {
+	r.response = b
+	return r.ResponseWriter.Write(b)
+}
+
+func (r *recorder) WriteHeader(statusCode int) {
+	r.Status = statusCode
+	r.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (app *application) httpLog(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			app.log.Warn(err)
+			next.ServeHTTP(w, r)
+			return
+		}
+		defer r.Body.Close()
+		reader := io.NopCloser(bytes.NewBuffer(body))
+
+		r.Body = reader
+
+		rec := &recorder{
+			ResponseWriter: w,
+			Status:         http.StatusOK,
+		}
+
+		next.ServeHTTP(rec, r)
+
+		body = reWhiteSpaces.ReplaceAll(body, []byte(""))
+
+		app.log.Debugf("REQT: %s %s %s", r.Method, r.RequestURI, body)
+		app.log.Debugf("RESP: %d %s %s", rec.Status, r.RequestURI, rec.response)
+	})
+}
+
+var (
+	reWhiteSpaces = regexp.MustCompile(`(\n+|\s+)`)
+)
