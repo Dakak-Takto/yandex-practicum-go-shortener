@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,7 +38,7 @@ func New(usecase model.ShortUsecase, baseURL string, cookieStore *sessions.Cooki
 func (h *handler) Register(router chi.Router) {
 	router.Use(middleware.Compress(5, "text/*", "application/json"))
 
-	router.Use(h.auth)
+	router.Use(h.auth, middleware.Compress(gzip.BestSpeed, "text/plain, application/json"), h.decompress)
 	router.Route("/", func(r chi.Router) {
 		router.Get("/{key}", h.getRedirect)
 		router.Get("/ping", h.pingDatabase)
@@ -135,8 +136,8 @@ func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
 
 		result.Result = fmt.Sprintf("%s/%s", h.baseURL, short.Key)
 
-		w.WriteHeader(http.StatusCreated)
 		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
 		if err := json.NewEncoder(w).Encode(result); err != nil {
 			log.Printf("error encode result: %s", err)
 		}

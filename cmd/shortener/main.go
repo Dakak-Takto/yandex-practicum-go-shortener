@@ -78,6 +78,7 @@ func main() {
 	router := chi.NewMux()
 	handler.Register(router)
 
+	log.Info("listen http on ", cfg.Addr)
 	log.Fatal(
 		http.ListenAndServe(cfg.Addr, router),
 	)
