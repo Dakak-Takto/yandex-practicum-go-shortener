@@ -170,7 +170,7 @@ func (h *handler) makeShort(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "%s/%s", "base_url", short.Key)
+	fmt.Fprintf(w, "%s/%s", h.baseURL, short.Key)
 }
 
 type makeShortBatchRequest struct {
