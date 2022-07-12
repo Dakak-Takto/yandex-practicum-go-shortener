@@ -3,26 +3,25 @@ package main
 import (
 	"crypto/aes"
 	"database/sql"
-	_ "database/sql"
 	"encoding/json"
-	_ "encoding/json"
 	"flag"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
 	"path"
 	"runtime"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/gorilla/securecookie"
+	"github.com/go-chi/chi/v5"
+	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
 
-	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/app"
-	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
-	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
-	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/database"
-	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/infile"
-	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/inmem"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/entity"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/handlers"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/repository/infile"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/repository/inmem"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/repository/postgresql"
+	_usecase "github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/usecase/url"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/pkg/random"
 )
 
 var (
@@ -38,8 +37,10 @@ var cfg struct {
 }
 
 func main() {
-
+	// init logger
 	log := logrus.StandardLogger()
+
+	// setup logger
 	log.SetFormatter(&logrus.TextFormatter{
 		TimestampFormat: "15:05:05",
 		FullTimestamp:   true,
@@ -53,64 +54,67 @@ func main() {
 	log.SetLevel(logrus.DebugLevel)
 	log.Debug("init logger")
 
+	// parse env
 	var err = env.Parse(&cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// parse flags
 	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
 	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
 	flag.StringVar(&cfg.DatabaseDSN, "d", "", "dsn string for connection ")
 	flag.Parse()
 
-	//Create storage instance
-	var store storage.Storage
+	//init storage instance
+	var repo entity.URLRepository
 
 	switch {
+
 	case cfg.DatabaseDSN != "":
 		log.Debug("use database. dsn:", cfg.DatabaseDSN)
-		store, err = database.New(cfg.DatabaseDSN)
+		repo, err = postgresql.New(cfg.DatabaseDSN)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 	case cfg.FileStoragePath != "":
 		log.Debug("use file storage. file storage path:", cfg.FileStoragePath)
-		store, err = infile.New(cfg.FileStoragePath)
+		repo, err = infile.New(cfg.FileStoragePath)
 		if err != nil {
 			log.Fatal(err)
 		}
+
 	default:
 
 		log.Debug("use memory storage")
-		store, err = inmem.New()
+		repo, err = inmem.New()
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 
+	// init router
+	router := chi.NewMux()
+
+	// init cookieStore
 	secret, err := random.RandomBytes(aes.BlockSize * 4)
 	if err != nil {
 		log.Fatal(err)
 	}
 	log.Infof("cookie secret: %x", secret)
-	secureCookie := securecookie.New(secret[:32], secret[32:])
+	cookieStore := sessions.NewCookieStore(secret)
 
-	//Create app instance
-	app := app.New(
-		app.WithStorage(store),
-		app.WithBaseURL(cfg.BaseURL),
-		app.WithAddr(cfg.Addr),
-		app.WithSecureCookie(secureCookie),
-		app.WithLogger(log),
-	)
+	usecase := _usecase.New(repo, log)
+	handler := handlers.New(usecase, log, cfg.BaseURL, cookieStore)
+	handler.Register(router)
 
-	//pprof
-	go func() {
-		http.ListenAndServe("localhost:8008", nil)
-	}()
+	// init http server
+	server := http.Server{}
+	server.Addr = cfg.Addr
+	server.Handler = router
 
 	//Run app
-	log.Fatal(app.Run())
+	log.Fatal(server.ListenAndServe())
 }
