@@ -2,7 +2,9 @@ package app
 
 import (
 	"compress/gzip"
+	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -119,4 +121,24 @@ func WithSecureCookie(s *securecookie.SecureCookie) Option {
 	return func(app *application) {
 		app.secureCookie = s
 	}
+}
+
+func (app *application) makeShort(original string, userID string) (storage.URLRecord, error) {
+	parsedURL, err := url.ParseRequestURI(original)
+	if err != nil {
+		return storage.URLRecord{}, fmt.Errorf("no valid url found")
+	}
+
+	key := app.generateKey(keyLenghtStart)
+	app.logger.Print("generated new key:", key)
+
+	if err := app.store.Save(key, parsedURL.String(), userID); err != nil {
+		return storage.URLRecord{}, err
+	}
+
+	return storage.URLRecord{
+		Original: original,
+		Short:    key,
+		UserID:   userID,
+	}, nil
 }

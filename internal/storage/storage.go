@@ -7,8 +7,6 @@ type Storage interface {
 	GetByOriginal(original string) (URLRecord, error)
 	Save(short, original, userID string) error
 	SelectByUID(uid string) ([]URLRecord, error)
-	Lock()
-	Unlock()
 	Ping() error
 	Delete(uid string, keys ...string)
 }

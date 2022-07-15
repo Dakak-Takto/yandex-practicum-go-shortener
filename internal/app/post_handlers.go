@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
+	_url "net/url"
 
 	"github.com/go-chi/render"
 
@@ -41,25 +41,12 @@ func (app *application) postHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	parsedURL, err := url.ParseRequestURI(request.URL)
-	if err != nil {
-		app.logger.Print("error parse url:", request.URL, err)
-		render.Status(r, http.StatusBadRequest)
-		render.JSON(w, r, render.M{"error": "no valid url found"})
-	}
-
-	app.store.Lock()
-	defer app.store.Unlock()
-
-	key := app.generateKey(keyLenghtStart)
-	app.logger.Print("generated new key:", key)
-
-	err = app.store.Save(key, parsedURL.String(), uid)
+	url, err := app.makeShort(request.URL, uid)
 	if err != nil {
 		if errors.Is(err, storage.ErrDuplicate) {
 			app.logger.Print("database unique violation error", err)
 
-			existURL, _ := app.store.GetByOriginal(parsedURL.String())
+			existURL, _ := app.store.GetByOriginal(request.URL)
 			render.Status(r, http.StatusConflict)
 			result := fmt.Sprintf("%s/%s", app.baseURL, existURL.Short)
 			render.JSON(w, r, render.M{"result": result})
@@ -67,9 +54,9 @@ func (app *application) postHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		app.logger.Print(err)
 	}
-	app.logger.Printf("url saved: URL: '%s', key '%s'", uid, key)
+	app.logger.Printf("url saved: URL: '%s', key '%s'", uid, url.Short)
 
-	result := fmt.Sprintf("%s/%s", app.baseURL, key)
+	result := fmt.Sprintf("%s/%s", app.baseURL, url.Short)
 
 	render.Status(r, http.StatusCreated)
 	render.JSON(w, r, render.M{"result": result})
@@ -107,7 +94,7 @@ func (app *application) batchPostHandler(w http.ResponseWriter, r *http.Request)
 	var batchResponseURLs []responseURLs
 
 	for _, batchItem := range batchRequestURLs {
-		originalURL, err := url.ParseRequestURI(batchItem.OriginalURL)
+		originalURL, err := _url.ParseRequestURI(batchItem.OriginalURL)
 		if err != nil {
 			app.logger.Print("error parse url:", batchItem.OriginalURL, err)
 			render.Status(r, http.StatusBadRequest)
@@ -155,15 +142,12 @@ func (app *application) legacyPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	parsedURL, err := url.ParseRequestURI(string(body))
+	parsedURL, err := _url.ParseRequestURI(string(body))
 	if err != nil {
 		app.logger.Printf("Error parse URL: %s; Err: %s", string(body), err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
-	app.store.Lock()
-	defer app.store.Unlock()
 
 	key := app.generateKey(keyLenghtStart)
 	app.logger.Printf("generated key: %s", key)

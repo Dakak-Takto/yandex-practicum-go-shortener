@@ -14,3 +14,11 @@ func TestString(t *testing.T) {
 		}
 	})
 }
+
+func BenchmarkString(b *testing.B) {
+	const stringLenght int = 10
+
+	for i := 0; i < b.N; i++ {
+		_ = String(stringLenght)
+	}
+}

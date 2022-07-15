@@ -76,6 +76,3 @@ func (d *database) Delete(uid string, keys ...string) {
 		log.Println("error set deleted: ", err)
 	}
 }
-
-func (d *database) Lock()   {}
-func (d *database) Unlock() {}
