@@ -6,15 +6,18 @@ import (
 	"encoding/json"
 	"flag"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/caarlos0/env/v6"
+	_ "github.com/golang/mock/mockgen/model"
 	"github.com/gorilla/securecookie"
 
-	"yandex-practicum-go-shortener/internal/app"
-	"yandex-practicum-go-shortener/internal/storage"
-	"yandex-practicum-go-shortener/internal/storage/database"
-	"yandex-practicum-go-shortener/internal/storage/infile"
-	"yandex-practicum-go-shortener/internal/storage/inmem"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/app"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/database"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/infile"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/inmem"
 )
 
 var _ json.Number        //использование известной библиотеки кодирования JSON
@@ -47,7 +50,7 @@ func main() {
 		app.WithAddr(cfg.Addr),
 		app.WithSecureCookie(secureCookie),
 	)
-
+	go runPProfHttpServer("localhost:8081")
 	//Run app
 	log.Fatal(app.Run())
 }
@@ -87,4 +90,9 @@ func getSecureCookieInstance() *securecookie.SecureCookie {
 	hashKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
 	blockKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
 	return securecookie.New(hashKey, blockKey)
+}
+
+func runPProfHttpServer(addr string) {
+	log.Printf("run pprof http server on %s\n", addr)
+	http.ListenAndServe(addr, nil)
 }

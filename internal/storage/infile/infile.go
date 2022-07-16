@@ -9,7 +9,7 @@ import (
 	"os"
 	"sync"
 
-	"yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
 )
 
 type store struct {
