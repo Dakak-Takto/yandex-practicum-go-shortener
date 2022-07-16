@@ -1,3 +1,4 @@
+// приложение для сокращения URL
 package main
 
 import (
@@ -50,7 +51,7 @@ func main() {
 		app.WithAddr(cfg.Addr),
 		app.WithSecureCookie(secureCookie),
 	)
-	go runPProfHttpServer("localhost:8081")
+	go runPProfHTTPServer("localhost:8081")
 	//Run app
 	log.Fatal(app.Run())
 }
@@ -92,7 +93,7 @@ func getSecureCookieInstance() *securecookie.SecureCookie {
 	return securecookie.New(hashKey, blockKey)
 }
 
-func runPProfHttpServer(addr string) {
+func runPProfHTTPServer(addr string) {
 	log.Printf("run pprof http server on %s\n", addr)
 	http.ListenAndServe(addr, nil)
 }

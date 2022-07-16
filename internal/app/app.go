@@ -1,3 +1,4 @@
+// app реализует бизнес-логику приложения и содержит HTTP хендлеры
 package app
 
 import (
@@ -21,13 +22,14 @@ type Application interface {
 }
 
 type application struct {
-	store        storage.Storage
-	baseURL      string
-	addr         string
-	secureCookie *securecookie.SecureCookie
-	logger       zerolog.Logger
+	store        storage.Storage            // хранилище
+	baseURL      string                     // базовый URL для сокращенных ссылок
+	addr         string                     // адрес для HTTP сервера
+	secureCookie *securecookie.SecureCookie // работа с шифрованными cookie
+	logger       zerolog.Logger             // логирование
 }
 
+// создает экземпляр Application и применяет опции
 func New(opts ...Option) Application {
 	app := application{}
 	for _, o := range opts {
@@ -36,6 +38,7 @@ func New(opts ...Option) Application {
 	return &app
 }
 
+// создает роутер, логгер, регистрирует хендлеры, запускает веб-сервер
 func (app *application) Run() error {
 
 	router := chi.NewRouter()
@@ -117,12 +120,16 @@ func WithAddr(addr string) Option {
 	}
 }
 
+//set cookie store
 func WithSecureCookie(s *securecookie.SecureCookie) Option {
 	return func(app *application) {
 		app.secureCookie = s
 	}
 }
 
+// возвращает сокращенную ссылку.
+// original - строка, содержащая оригинальный URL
+// userID - строка, содержащая идентификатор пользователя
 func (app *application) makeShort(original string, userID string) (storage.URLRecord, error) {
 	parsedURL, err := url.ParseRequestURI(original)
 	if err != nil {
