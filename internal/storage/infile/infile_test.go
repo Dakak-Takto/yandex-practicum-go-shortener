@@ -3,7 +3,6 @@
 package infile
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,7 +12,7 @@ func TestInFile(t *testing.T) {
 
 	t.Run("Read storage test", func(t *testing.T) {
 		const testFileName string = "testFile.txt"
-		defer os.Remove(testFileName)
+		// defer os.Remove(testFileName)
 
 		store, err := New(testFileName)
 		require.NoError(t, err)

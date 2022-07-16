@@ -4,6 +4,7 @@ package infile
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"sync"
@@ -14,8 +15,6 @@ import (
 type store struct {
 	fileMutex sync.Mutex
 	file      *os.File
-	encoder   *json.Encoder
-	decoder   *json.Decoder
 }
 
 var _ storage.Storage = (*store)(nil)
@@ -27,9 +26,7 @@ func New(filepath string) (storage.Storage, error) {
 	}
 
 	return &store{
-		file:    file,
-		decoder: json.NewDecoder(file),
-		encoder: json.NewEncoder(file),
+		file: file,
 	}, nil
 }
 
@@ -37,17 +34,19 @@ func (s *store) GetByShort(key string) (storage.URLRecord, error) {
 	s.fileMutex.Lock()
 	defer s.fileMutex.Unlock()
 
-	_, err := s.file.Seek(0, io.SeekStart)
-	if err != nil {
-		return storage.URLRecord{}, err
-	}
+	s.file.Seek(0, io.SeekStart)
+
+	decoder := json.NewDecoder(s.file)
+
 	for {
 		var rec storage.URLRecord
 
-		err := s.decoder.Decode(&rec)
-		if err != nil {
+		if err := decoder.Decode(&rec); err != nil {
+			fmt.Printf("error decode: %s", err)
 			break
 		}
+
+		fmt.Printf("found item: %v\n", rec)
 
 		if rec.Short == key {
 			return rec, nil
@@ -62,14 +61,13 @@ func (s *store) SelectByUID(uid string) ([]storage.URLRecord, error) {
 
 	var result []storage.URLRecord
 
-	_, err := s.file.Seek(0, io.SeekStart)
-	if err != nil {
-		return nil, err
-	}
+	s.file.Seek(0, io.SeekStart)
+	decoder := json.NewDecoder(s.file)
+
 	for {
 		var rec storage.URLRecord
 
-		err := s.decoder.Decode(&rec)
+		err := decoder.Decode(&rec)
 		if err != nil {
 			break
 		}
@@ -78,21 +76,20 @@ func (s *store) SelectByUID(uid string) ([]storage.URLRecord, error) {
 			result = append(result, rec)
 		}
 	}
-	return result, err
+	return result, nil
 }
 
 func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
 	s.fileMutex.Lock()
 	defer s.fileMutex.Unlock()
 
-	_, err := s.file.Seek(0, io.SeekStart)
-	if err != nil {
-		return storage.URLRecord{}, err
-	}
+	s.file.Seek(0, io.SeekStart)
+	decoder := json.NewDecoder(s.file)
+
 	for {
 		var rec storage.URLRecord
 
-		err := s.decoder.Decode(&rec)
+		err := decoder.Decode(&rec)
 		if err != nil {
 			break
 		}
@@ -108,17 +105,14 @@ func (s *store) Save(short, original, userID string) error {
 	s.fileMutex.Lock()
 	defer s.fileMutex.Unlock()
 
-	_, err := s.file.Seek(0, io.SeekEnd)
-	if err != nil {
-		return err
-	}
+	s.file.Seek(0, io.SeekEnd)
 
 	rec := storage.URLRecord{
 		Short:    short,
 		Original: original,
 		UserID:   userID,
 	}
-	if err := s.encoder.Encode(&rec); err != nil {
+	if err := json.NewEncoder(s.file).Encode(rec); err != nil {
 		return err
 	}
 	return nil
