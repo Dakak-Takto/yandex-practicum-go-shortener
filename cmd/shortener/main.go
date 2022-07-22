@@ -1,3 +1,4 @@
+// приложение для сокращения URL
 package main
 
 import (
@@ -5,16 +6,26 @@ import (
 	"database/sql"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
+	"path"
+	"runtime"
 
 	"github.com/caarlos0/env/v6"
-	"github.com/gorilla/securecookie"
+	"github.com/go-chi/chi/v5"
+	_ "github.com/golang/mock/mockgen/model"
+	"github.com/gorilla/sessions"
+	"github.com/sirupsen/logrus"
 
-	"yandex-practicum-go-shortener/internal/app"
-	"yandex-practicum-go-shortener/internal/storage"
-	"yandex-practicum-go-shortener/internal/storage/database"
-	"yandex-practicum-go-shortener/internal/storage/infile"
-	"yandex-practicum-go-shortener/internal/storage/inmem"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/app"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/handlers"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/database"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/infile"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage/inmem"
 )
 
 var _ json.Number        //использование известной библиотеки кодирования JSON
@@ -28,63 +39,87 @@ var cfg struct {
 }
 
 func main() {
+	log := logrus.StandardLogger()
+	log.SetFormatter(&logrus.TextFormatter{
+		TimestampFormat: "15:05:05",
+		FullTimestamp:   true,
+		ForceColors:     true,
+		CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
 
-	processEnv()
-	processFlags()
+			return "", fmt.Sprintf(" %s:%d", path.Base(f.File), f.Line)
+		},
+	})
+	log.SetReportCaller(true)
+	log.SetLevel(logrus.DebugLevel)
+	log.Debug("init logger")
 
-	//Create storage instance
-	store, err := getStorageInstance()
+	// parse env
+	var err = env.Parse(&cfg)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	var secureCookie = getSecureCookieInstance()
+	// parse flags
+	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
+	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
+	flag.StringVar(&cfg.DatabaseDSN, "d", "", "dsn string for connection ")
+	flag.Parse()
+
+	//Create storage instance
+	var store storage.Storage
+
+	switch {
+	case cfg.DatabaseDSN != "":
+		store, err = database.New(cfg.DatabaseDSN)
+		if err != nil {
+			log.Fatal(err)
+		}
+	case cfg.FileStoragePath != "":
+		store, err = infile.New(cfg.FileStoragePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+	default:
+		store, err = inmem.New()
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// create securecookie
+	secret, err := random.RandomBytes(aes.BlockSize * 4)
+	if err != nil {
+		log.Fatal(err)
+	}
+	session := sessions.NewCookieStore(secret)
 
 	//Create app instance
 	app := app.New(
 		app.WithStorage(store),
 		app.WithBaseURL(cfg.BaseURL),
 		app.WithAddr(cfg.Addr),
-		app.WithSecureCookie(secureCookie),
+		app.WithLogger(log),
 	)
 
-	//Run app
-	log.Fatal(app.Run())
+	//create router
+	router := chi.NewRouter()
+
+	// create and register handler
+	handler := handlers.New(app, cfg.BaseURL, session, log)
+	handler.Register(router)
+
+	//HTTP server
+	server := http.Server{}
+	server.Addr = cfg.Addr
+	server.Handler = router
+
+	go runPProfHTTPServer("localhost:8081")
+
+	log.Fatal(server.ListenAndServe())
 }
 
-func processEnv() {
-	var err = env.Parse(&cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func processFlags() {
-	flag.StringVar(&cfg.Addr, "a", cfg.Addr, "host:port")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "ex: http://example.com")
-	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "ex: /path/to/file")
-	flag.StringVar(&cfg.DatabaseDSN, "d", "", "dsn string for connection ")
-	flag.Parse()
-}
-
-func getStorageInstance() (storage.Storage, error) {
-
-	if cfg.DatabaseDSN != "" {
-		log.Println("use database. dsn:", cfg.DatabaseDSN)
-		return database.New(cfg.DatabaseDSN)
-	}
-
-	if cfg.FileStoragePath != "" {
-		log.Println("use file storage. file storage path:", cfg.FileStoragePath)
-		return infile.New(cfg.FileStoragePath)
-	}
-
-	log.Println("use memory storage")
-	return inmem.New()
-}
-
-func getSecureCookieInstance() *securecookie.SecureCookie {
-	hashKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
-	blockKey := securecookie.GenerateRandomKey(aes.BlockSize * 2)
-	return securecookie.New(hashKey, blockKey)
+func runPProfHTTPServer(addr string) {
+	log.Printf("run pprof http server on %s\n", addr)
+	http.ListenAndServe(addr, nil)
 }

@@ -1,4 +1,4 @@
-//Random string generator
+//Package random string generator
 package random
 
 import (
@@ -7,7 +7,7 @@ import (
 	"math/big"
 )
 
-//return random string
+//String return random string
 func String(lenght int) string {
 
 	var word = make([]rune, lenght)

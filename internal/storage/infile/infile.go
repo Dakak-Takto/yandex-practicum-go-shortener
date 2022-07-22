@@ -1,22 +1,20 @@
-//Used for file storage. Making file and write url per line
+//Package infile Used for file storage. Making file and write url per line
 package infile
 
 import (
-	"bufio"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
-	"strings"
 	"sync"
 
-	"yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
 )
 
 type store struct {
 	fileMutex sync.Mutex
 	file      *os.File
-	reader    *bufio.Reader
-	writer    *bufio.Writer
 }
 
 var _ storage.Storage = (*store)(nil)
@@ -28,101 +26,96 @@ func New(filepath string) (storage.Storage, error) {
 	}
 
 	return &store{
-		file:   file,
-		reader: bufio.NewReader(file),
-		writer: bufio.NewWriter(file),
+		file: file,
 	}, nil
 }
 
 func (s *store) GetByShort(key string) (storage.URLRecord, error) {
+	s.fileMutex.Lock()
+	defer s.fileMutex.Unlock()
 
-	_, err := s.file.Seek(0, io.SeekStart)
-	if err != nil {
-		return storage.URLRecord{}, err
-	}
+	s.file.Seek(0, io.SeekStart)
+
+	decoder := json.NewDecoder(s.file)
+
 	for {
-		b, _, err := s.reader.ReadLine()
-		if err != nil {
+		var rec storage.URLRecord
+
+		if err := decoder.Decode(&rec); err != nil {
+			fmt.Printf("error decode: %s", err)
 			break
 		}
-		record := strings.Split(string(b), ",")
-		if key == record[0] {
-			return storage.URLRecord{
-				Short:    record[0],
-				Original: record[1],
-			}, nil
+
+		fmt.Printf("found item: %v\n", rec)
+
+		if rec.Short == key {
+			return rec, nil
 		}
 	}
 	return storage.URLRecord{}, errors.New("errNotFound")
 }
 
 func (s *store) SelectByUID(uid string) ([]storage.URLRecord, error) {
+	s.fileMutex.Lock()
+	defer s.fileMutex.Unlock()
+
 	var result []storage.URLRecord
 
-	_, err := s.file.Seek(0, io.SeekStart)
-	if err != nil {
-		return nil, err
-	}
+	s.file.Seek(0, io.SeekStart)
+	decoder := json.NewDecoder(s.file)
+
 	for {
-		b, _, err := s.reader.ReadLine()
+		var rec storage.URLRecord
+
+		err := decoder.Decode(&rec)
 		if err != nil {
 			break
 		}
-		record := strings.Split(string(b), ",")
-		if record[2] == uid {
-			result = append(result, storage.URLRecord{
-				Short:    record[0],
-				Original: record[1],
-				UserID:   record[2],
-			})
+
+		if rec.UserID == uid {
+			result = append(result, rec)
 		}
 	}
 	return result, nil
 }
 
 func (s *store) GetByOriginal(original string) (storage.URLRecord, error) {
+	s.fileMutex.Lock()
+	defer s.fileMutex.Unlock()
 
-	_, err := s.file.Seek(0, io.SeekStart)
-	if err != nil {
-		return storage.URLRecord{}, err
-	}
+	s.file.Seek(0, io.SeekStart)
+	decoder := json.NewDecoder(s.file)
+
 	for {
-		b, _, err := s.reader.ReadLine()
+		var rec storage.URLRecord
+
+		err := decoder.Decode(&rec)
 		if err != nil {
 			break
 		}
-		record := strings.Split(string(b), ",")
-		if record[2] == original {
-			return storage.URLRecord{
-				Short:    record[0],
-				Original: record[1],
-				UserID:   record[2],
-			}, nil
+
+		if rec.Original == original {
+			return rec, nil
 		}
 	}
 	return storage.URLRecord{}, errors.New("notFound")
 }
 
 func (s *store) Save(short, original, userID string) error {
-	_, err := s.file.Seek(0, io.SeekEnd)
-	if err != nil {
-		return err
-	}
-
-	record := []string{short, original, userID}
-
-	_, err = s.writer.WriteString(strings.Join(record, ",") + "\n")
-	if err != nil {
-		return err
-	}
-	return s.writer.Flush()
-}
-
-func (s *store) Lock() {
 	s.fileMutex.Lock()
-}
-func (s *store) Unlock() {
-	s.fileMutex.Unlock()
+	defer s.fileMutex.Unlock()
+
+	s.file.Seek(0, io.SeekEnd)
+
+	rec := storage.URLRecord{
+		Short:    short,
+		Original: original,
+		UserID:   userID,
+	}
+	if err := json.NewEncoder(s.file).Encode(rec); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *store) Ping() error {

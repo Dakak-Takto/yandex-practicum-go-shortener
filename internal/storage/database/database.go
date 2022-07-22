@@ -1,3 +1,4 @@
+// Package database use for store short urls in postgresql database
 package database
 
 import (
@@ -9,7 +10,7 @@ import (
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
 
-	"yandex-practicum-go-shortener/internal/storage"
+	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
 )
 
 type database struct {
@@ -76,6 +77,3 @@ func (d *database) Delete(uid string, keys ...string) {
 		log.Println("error set deleted: ", err)
 	}
 }
-
-func (d *database) Lock()   {}
-func (d *database) Unlock() {}
