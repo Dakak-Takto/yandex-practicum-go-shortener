@@ -1,3 +1,4 @@
+// Package database use for store short urls in postgresql database
 package database
 
 import (

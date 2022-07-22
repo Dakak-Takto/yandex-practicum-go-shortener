@@ -1,4 +1,4 @@
-// модуль хранения записей сокращенных URL
+//Package storage модуль хранения записей сокращенных URL
 package storage
 
 import "errors"

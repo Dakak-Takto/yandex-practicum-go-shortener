@@ -1,4 +1,4 @@
-//package inmem storing urls in memory (slice)
+// Package inmem storing urls in memory (slice)
 package inmem
 
 import (

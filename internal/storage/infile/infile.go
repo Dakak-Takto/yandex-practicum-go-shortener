@@ -1,4 +1,4 @@
-//Used for file storage. Making file and write url per line
+//Package infile Used for file storage. Making file and write url per line
 package infile
 
 import (

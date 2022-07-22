@@ -1,35 +1,33 @@
-// app реализует бизнес-логику приложения и содержит HTTP хендлеры
+// Package app реализует бизнес-логику приложения и содержит HTTP хендлеры
 package app
 
 import (
-	"compress/gzip"
 	"fmt"
-	"net/http"
 	"net/url"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	"github.com/go-chi/httplog"
-	"github.com/gorilla/securecookie"
-	"github.com/rs/zerolog"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/random"
 	"github.com/Dakak-Takto/yandex-practicum-go-shortener/internal/storage"
 )
 
 type Application interface {
-	Run() error
+	MakeShort(original string, userID string) (storage.URLRecord, error)
+	GetByOriginal(original string) (storage.URLRecord, error)
+	GetByShort(short string) (storage.URLRecord, error)
+	SelectByUID(userID string) ([]storage.URLRecord, error)
+	Delete(userID string, shorts ...string)
+	PingDatabase() error
 }
 
 type application struct {
-	store        storage.Storage            // хранилище
-	baseURL      string                     // базовый URL для сокращенных ссылок
-	addr         string                     // адрес для HTTP сервера
-	secureCookie *securecookie.SecureCookie // работа с шифрованными cookie
-	logger       zerolog.Logger             // логирование
+	store   storage.Storage // хранилище
+	baseURL string          // базовый URL для сокращенных ссылок
+	addr    string          // адрес для HTTP сервера
+	log     *logrus.Logger  // логирование
 }
 
-// создает экземпляр Application и применяет опции
+// New создает экземпляр Application и применяет опции
 func New(opts ...Option) Application {
 	app := application{}
 	for _, o := range opts {
@@ -38,114 +36,91 @@ func New(opts ...Option) Application {
 	return &app
 }
 
-// создает роутер, логгер, регистрирует хендлеры, запускает веб-сервер
-func (app *application) Run() error {
-
-	router := chi.NewRouter()
-
-	//Middlewares
-	app.logger = httplog.NewLogger("httplog", httplog.Options{LogLevel: "debug", JSON: false})
-	router.Use(httplog.Handler(app.logger))
-
-	router.Use(middleware.Compress(gzip.BestCompression, "application/*", "text/*"))
-	router.Use(app.decompress)
-	router.Use(app.SetCookie)
-
-	//Routes
-	router.Route("/", func(r chi.Router) {
-		router.Get("/{key}", app.getHandler)
-		router.Get("/ping", app.pingDatabase)
-		router.Post("/", app.legacyPostHandler)
-	})
-
-	router.Route("/api/shorten", func(r chi.Router) {
-		r.Post("/", app.postHandler)
-		r.Post("/batch", app.batchPostHandler)
-	})
-
-	router.Route("/api/user/urls", func(r chi.Router) {
-		r.Get("/", app.getUserURLs)
-		r.Delete("/", app.deleteHandler)
-	})
-
-	//Run
-	app.logger.Printf("Run app on %s", app.addr)
-
-	//Http server
-	server := http.Server{}
-	server.Addr = app.addr
-	server.Handler = router
-
-	return server.ListenAndServe()
-}
-
-/*generating unique key in cycle. If key will be exists in storage len be increase by one for each iteration*/
-func (app *application) generateKey(startLenght int) string {
-	var n = startLenght
-
-	for {
-		short := random.String(n)
-		if _, err := app.store.GetByShort(short); err == nil {
-			n = n + 1
-			continue
-		} else {
-			return short
-		}
-	}
-
-}
-
 //Application option declaration
 
 type Option func(app *application)
 
-//add storage to application
+//WithStorage add storage to application
 func WithStorage(storage storage.Storage) Option {
 	return func(app *application) {
 		app.store = storage
 	}
 }
 
-//change application base_url
+//WithLogger set logger
+func WithLogger(log *logrus.Logger) Option {
+	return func(app *application) {
+		app.log = log
+	}
+}
+
+//WithBaseURL change application base_url
 func WithBaseURL(baseURL string) Option {
 	return func(app *application) {
 		app.baseURL = baseURL
 	}
 }
 
-//change http server addr
+//WithAddr change http server addr
 func WithAddr(addr string) Option {
 	return func(app *application) {
 		app.addr = addr
 	}
 }
 
-//set cookie store
-func WithSecureCookie(s *securecookie.SecureCookie) Option {
-	return func(app *application) {
-		app.secureCookie = s
-	}
-}
-
 // возвращает сокращенную ссылку.
 // original - строка, содержащая оригинальный URL
 // userID - строка, содержащая идентификатор пользователя
-func (app *application) makeShort(original string, userID string) (storage.URLRecord, error) {
+func (app *application) MakeShort(original string, userID string) (storage.URLRecord, error) {
 	parsedURL, err := url.ParseRequestURI(original)
 	if err != nil {
 		return storage.URLRecord{}, fmt.Errorf("no valid url found")
 	}
 
-	key := app.generateKey(keyLenghtStart)
-	app.logger.Print("generated new key:", key)
-
-	if err := app.store.Save(key, parsedURL.String(), userID); err != nil {
+	short := random.String(8)
+	if err := app.store.Save(short, parsedURL.String(), userID); err != nil {
 		return storage.URLRecord{}, err
 	}
 
 	return storage.URLRecord{
 		Original: original,
-		Short:    key,
+		Short:    short,
 		UserID:   userID,
 	}, nil
+}
+
+func (app *application) GetByOriginal(original string) (storage.URLRecord, error) {
+	if url, err := app.store.GetByOriginal(original); err != nil {
+		return storage.URLRecord{}, err
+	} else {
+		return url, nil
+	}
+}
+
+func (app *application) GetByShort(short string) (storage.URLRecord, error) {
+	if url, err := app.store.GetByShort(short); err != nil {
+		return storage.URLRecord{}, err
+	} else {
+		return url, nil
+	}
+}
+
+func (app *application) SelectByUID(userID string) ([]storage.URLRecord, error) {
+	if urls, err := app.store.SelectByUID(userID); err != nil {
+		return nil, err
+	} else {
+		return urls, nil
+	}
+}
+
+func (app *application) PingDatabase() error {
+	if err := app.store.Ping(); err != nil {
+		return err
+	} else {
+		return nil
+	}
+}
+
+func (app *application) Delete(userID string, shorts ...string) {
+	app.store.Delete(userID, shorts...)
 }
